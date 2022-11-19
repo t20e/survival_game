@@ -1,0 +1,17 @@
+@font-face {
+    font-family: pixel_font;
+    src: url('./assets/PressStart2P-Regular.ttf');
+}
+html {
+    overflow: hidden;
+}
+
+body {
+    background-color: white;
+}
+* {
+    font-family: pixel_font;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}

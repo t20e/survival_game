@@ -1,30 +1,45 @@
-import './styles/main.css'
+import './style.css'
 import base_img_import from './assets/base_map.png'
 import base_map_zoomed_out from './assets/base_map_zoomed_out.png'
-import player from './assets/player/Shotgunner/idle.png'
+import foregroundImport from './assets/foreground_map.png'
 import { collisions } from './assets/collision_array'
 
+// const Sprite = require('./classes')
+// const  Sprite  = require('./classes')
+import { Boundary, Sprite } from './classes'
+// player imgs
+import player_imgDown from './assets/test_player/playerDown.png'
+import playerImgUpPng from './assets/test_player/playerUp.png'
+import playerImgRightPng from './assets/test_player/playerRight.png'
+import playerImgLeftPng from './assets/test_player/playerLeft.png'
+
+//
 const canvas = document.querySelector('canvas')
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
-const context = canvas.getContext('2d')
+export const context = canvas.getContext('2d')
 const base_img = new Image()
 base_img.src = base_map_zoomed_out
-base_img.style.opacity = .4
-const playerImg = new Image()
-playerImg.src = player
+
+const foregroundImg = new Image()
+foregroundImg.src = foregroundImport
+// down
+const playerImgDown = new Image()
+playerImgDown.src = player_imgDown
+// up
+const playerImgUp = new Image()
+playerImgUp.src = playerImgUpPng
+// right
+const playerImgRight = new Image()
+playerImgRight.src = playerImgRightPng
+// left
+const playerImgLeft = new Image()
+playerImgLeft.src = playerImgLeftPng
+
 
 
 // map location
-class Sprite {
-    constructor({ position, image }) {
-        this.position = position
-        this.image = image
-    }
-    draw() {
-        context.drawImage(this.image, this.position.x, this.position.y);
-    }
-}
+
 const offset = {
     x: -1250,
     y: -1500
@@ -36,24 +51,34 @@ const background = new Sprite({
     },
     image: base_img
 })
+const foreground = new Sprite({
+    position: {
+        x: offset.x,
+        y: offset.y,
+    },
+    image: foregroundImg
+})
+
+const player = new Sprite({
+    image: playerImgRight,
+    frames: { max: 4 },
+    // clippedSpriteSize: { x: 4, y: 1 },
+    position: {
+        x: canvas.width / 2 - 192 / 4 / 2,
+        y: canvas.height / 2 - 68 / 2
+    },
+    sprites: {
+        up: playerImgUp,
+        left: playerImgLeft,
+        right: playerImgRight,
+        down: playerImgDown,
+    }
+})
 // boundaries
 const collisions_map = []
 const boundaries = []
 
-class Boundary {
-    static width = 64
-    static height = 64
-    constructor({ position }) {
-        this.position = position,
-            // 16pixels times 4 (the zoomed in amount is 400%) = 64
-            this.width = 64
-        this.height = 64
-    }
-    draw() {
-        context.fillStyle = 'red'
-        context.fillRect(this.position.x, this.position.y, this.width, this.height)
-    }
-}
+
 
 const init = () => {
     context.fillStyle = 'black'
@@ -63,9 +88,9 @@ const init = () => {
     // context.globalAlpha = 0.9
     context.drawImage(base_img, -base_img.width / 2, -base_img.height / 2);
     context.translate(-canvas.width / 2, -canvas.height / 2)
-    // TODO when user clicks play button it starts game 
     base_img.src = ''
     base_img.src = base_img_import
+    // TODO when user clicks play button it starts game 
     base_img.onload = () => {
         setTimeout(() => {
             context.clearRect(0, 0, canvas.width, canvas.height);
@@ -137,87 +162,74 @@ const keys = {
     },
 }
 
-const testBoundary = new Boundary({
-    position: {
-        x: 400,
-        y: 400
-    }
-})
-
-const moveables = [background, testBoundary]
+// const testBoundary = new Boundary({
+//     position: {
+//         x: 400,
+//         y: 400
+//     }
+// })
+const chechCollidingObjs = ({ objOne, collidingObj }) => {
+    return (
+        objOne.position.x + objOne.width >= collidingObj.position.x
+        && objOne.position.x <= collidingObj.position.x + collidingObj.width
+        // check if objOne and bottom of boundary are colliding
+        && objOne.position.y <= collidingObj.position.y + collidingObj.height
+        // check if objOne and top of boundary are colliding
+        && objOne.position.y + objOne.height >= collidingObj.position.y
+    )
+}
+const moveables = [background, foreground]
 const animate = () => {
     window.requestAnimationFrame(animate)
     background.draw()
-    // boundaries.forEach(boundary =>{
-    //     boundary.draw()
-    // })
-    testBoundary.draw()
-    context.drawImage(
-        playerImg,
-        0, //x coordinate ? of player sprites crop
-        0, //y coordinate ? of player sprites crop
-        playerImg.width, // how much to crop the image //tip if threes 5 characters going left to right, and u want the 3rd character then this should be 3
-        playerImg.height / 5, // how much to crop the image 
-        canvas.width / 2 - (playerImg.width),//location that image is placed on canvas x
-        canvas.height / 2 - (playerImg.height) / 2, //location that image is placed on canvas y,
-        playerImg.width * 4, // image the crop is rendered as y
-        playerImg.height / 5 * 4, // image the crop is rendered as x
-    )
-    // collision between the player and boundaries
-        // if(player)
-    // /w 
-    if (keys.w.pressed && keys.a.pressed) {
-        moveables.forEach(pChange => {
-            pChange.position.y = pChange.position.y + 2
-            pChange.position.x = pChange.position.x + 2
-        })
+    boundaries.forEach(boundary => {
+        boundary.draw()
+    })
+    player.draw()
+    foreground.draw()
+
+    // testBoundary.draw()
+    allowMoving = true
+    player.moving = false
+    if (keys.w.pressed) {
+        player.image = player.sprites.up
+        player.moving = true
+        checkCollidingOnKeyPress({ pixelCount: { 'y': { amount: 3 } } })
+        if (allowMoving) {
+            moveables.forEach(item => {
+                item.position.y = item.position.y + 3
+            })
+        }
     }
-    else if (keys.w.pressed && keys.s.pressed) {
-        moveables.forEach(pChange => {
-            pChange.position.y = pChange.position.y
-            pChange.position.x = pChange.position.x
-        })
+    if (keys.s.pressed) {
+        player.image = player.sprites.down
+        player.moving = true
+        checkCollidingOnKeyPress({ pixelCount: { 'y': { amount: -3 } } })
+        if (allowMoving) {
+            moveables.forEach(item => {
+                item.position.y = item.position.y - 3
+            })
+        }
     }
-    else if (keys.w.pressed && keys.d.pressed) {
-        moveables.forEach(pChange => {
-            pChange.position.y = pChange.position.y + 2
-            pChange.position.x = pChange.position.x - 2
-        })
-        // background.position.y = background.position.y + 2
-        // background.position.x = background.position.x - 2
+    if (keys.a.pressed) {
+        player.image = player.sprites.left
+        player.moving = true
+        checkCollidingOnKeyPress({ pixelCount: { 'x': { amount: 3 } } })
+        if (allowMoving) {
+            moveables.forEach(item => {
+                item.position.x = item.position.x + 3
+            })
+        }
     }
-    // s
-    else if (keys.s.pressed && keys.a.pressed) {
-        moveables.forEach(pChange => {
-            pChange.position.y = pChange.position.y - 2
-            pChange.position.x = pChange.position.x + 2
-        })
-    }
-    else if (keys.s.pressed && keys.d.pressed) {
-        moveables.forEach(pChange => {
-            pChange.position.y = pChange.position.y - 2
-            pChange.position.x = pChange.position.x - 2
-        })
-    }
-    else if (keys.w.pressed ) {
-        moveables.forEach(pChange => {
-            pChange.position.y = pChange.position.y + 3
-        })
-    }
-    else if (keys.s.pressed ) {
-        moveables.forEach(pChange => {
-            pChange.position.y = pChange.position.y - 3
-        })
-    }
-    else if (keys.a.pressed ) {
-        moveables.forEach(pChange => {
-            pChange.position.x = pChange.position.x + 3
-        })
-    }
-    else if (keys.d.pressed ) {
-        moveables.forEach(pChange => {
-            pChange.position.x = pChange.position.x - 3
-        })
+    if (keys.d.pressed) {
+        player.moving = true
+        player.image = player.sprites.right
+        checkCollidingOnKeyPress({ pixelCount: { 'y': { amount: -3 } } })
+        if (allowMoving) {
+            moveables.forEach(item => {
+                item.position.x = item.position.x - 3
+            })
+        }
     }
 }
 const addBoundaries = () => {
@@ -225,12 +237,13 @@ const addBoundaries = () => {
     for (let i = 0; i < collisions.length; i += 80) {
         // loop through height
         collisions_map.push(collisions.slice(i, 80 + i))
-        console.log(collisions_map)
+        // console.log(collisions_map)
     }
-
+    // console.log(collisions_map)
     collisions_map.forEach((row, i) => {
         row.forEach((Symbol, j) => {
-            if (Symbol === 2684365069) {
+            // the symbol us equal to the collision red block in the collision array from json which was imported from tiled app
+            if (Symbol === 10509) {
                 boundaries.push(new Boundary({
                     position: {
                         x: j * Boundary.width + offset.x,
@@ -240,5 +253,41 @@ const addBoundaries = () => {
             }
         })
     })
-    console.log(boundaries)
+    // console.log(boundaries)
+    moveables.push(...boundaries)
 }
+let allowMoving;
+// pixelCount checks if player is about to collied by  pixels
+const checkCollidingOnKeyPress = ({ pixelCount }) => {
+    let checkY;
+    pixelCount['y'] ? checkY = true : checkY = false
+    let add;
+    // if(data['keyPressed'] !== keys.lastKeyPressed) allowMoving = true
+    for (let i = 0; i < boundaries.length; i++) {
+        const boundary = boundaries[i]
+        if (checkY) {
+            add = { x: boundary.position.x, y: boundary.position.y + pixelCount['y']['amount'] }
+        } else {
+            add = { x: boundary.position.x + pixelCount['x']['amount'], y: boundary.position.y }
+        }
+        if (chechCollidingObjs({
+            objOne: player, collidingObj: {
+                ...boundary, position: add
+            }
+        })) {
+            // this checks if the  objs are colliding
+            allowMoving = false
+            colliding()
+            // context.fillStyle = 'blue'?
+            // stops the loop so because we already collied, no reason to continue looping over the rest of the boundaries
+            break;
+        }
+    }
+}
+const colliding = () => {
+    // TODO div that popups saying that the user is going to restricted area
+    console.log('colliding')
+
+}
+
+module.exports = context
