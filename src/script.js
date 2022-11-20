@@ -1,42 +1,20 @@
 import './style.css'
-import base_img_import from './assets/base_map.png'
-import base_map_zoomed_out from './assets/base_map_zoomed_out.png'
-import foregroundImport from './assets/foreground_map.png'
-import { collisions } from './assets/collision_array'
+import base_img_import from './assets/map/base_map.png'
 
-// const Sprite = require('./classes')
-// const  Sprite  = require('./classes')
-import { Boundary, Sprite } from './classes'
-// player imgs
-import player_imgDown from './assets/test_player/playerDown.png'
-import playerImgUpPng from './assets/test_player/playerUp.png'
-import playerImgRightPng from './assets/test_player/playerRight.png'
-import playerImgLeftPng from './assets/test_player/playerLeft.png'
+import { collisions } from './assets/map/collision_array'
+
+import { Boundary, Sprite, Enemy } from './classes'
+import {
+    base_img, foregroundImg, playerImgDown, playerImgUp, playerImgRight,
+    playerImgLeft, goblinSprites
+} from './createImgs'
+
 
 //
 const canvas = document.querySelector('canvas')
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 export const context = canvas.getContext('2d')
-const base_img = new Image()
-base_img.src = base_map_zoomed_out
-
-const foregroundImg = new Image()
-foregroundImg.src = foregroundImport
-// down
-const playerImgDown = new Image()
-playerImgDown.src = player_imgDown
-// up
-const playerImgUp = new Image()
-playerImgUp.src = playerImgUpPng
-// right
-const playerImgRight = new Image()
-playerImgRight.src = playerImgRightPng
-// left
-const playerImgLeft = new Image()
-playerImgLeft.src = playerImgLeftPng
-
-
 
 // map location
 
@@ -58,11 +36,24 @@ const foreground = new Sprite({
     },
     image: foregroundImg
 })
-
+const testEnemy = new Enemy({
+    moving: true,
+    speed: 2,
+    image: goblinSprites.left.idle,
+    position: {
+        x: 1200,
+        y: 700
+    },
+    // position: {
+    //     x: canvas.width / 2 - 192 / 4 / 2,
+    //     y: canvas.height / 2 - 68 / 2
+    // },
+    frames: { max: 6 },
+    sprites: goblinSprites
+})
 const player = new Sprite({
     image: playerImgRight,
     frames: { max: 4 },
-    // clippedSpriteSize: { x: 4, y: 1 },
     position: {
         x: canvas.width / 2 - 192 / 4 / 2,
         y: canvas.height / 2 - 68 / 2
@@ -72,13 +63,14 @@ const player = new Sprite({
         left: playerImgLeft,
         right: playerImgRight,
         down: playerImgDown,
-    }
+    },
 })
+// console.log('x:', player.position.x - testEnemy.position.y, '\ny:', player.position.y - testEnemy.position.y)
+// console.log('\n plaeyer:', player.position, '\nenemy:', testEnemy.position)
+
 // boundaries
 const collisions_map = []
 const boundaries = []
-
-
 
 const init = () => {
     context.fillStyle = 'black'
@@ -178,17 +170,42 @@ const chechCollidingObjs = ({ objOne, collidingObj }) => {
         && objOne.position.y + objOne.height >= collidingObj.position.y
     )
 }
-const moveables = [background, foreground]
+// moveables will move other objects when player moves to give the illusion that they are all moving
+const moveables = [background, foreground, testEnemy]
+let colliedDetected = false
 const animate = () => {
+
     window.requestAnimationFrame(animate)
     background.draw()
     boundaries.forEach(boundary => {
         boundary.draw()
     })
     player.draw()
-    foreground.draw()
 
-    // testBoundary.draw()
+    testEnemy.moveToPlayer({ 'canvas': canvas })
+    let checkY;
+    let add
+    // TODO: check
+    for (let i = 0; i < boundaries.length; i++) {
+        const boundary = boundaries[i]
+        if (checkY) {
+            add = { x: boundary.position.x, y: boundary.position.y + 3 }
+        } else {
+            add = { x: boundary.position.x + 3, y: boundary.position.y }
+        }
+        if (chechCollidingObjs({
+            objOne: testEnemy, collidingObj: {
+                ...boundary, position: add
+            }
+        })) {
+            // this checks if the  objs are colliding
+            console.log('enemy and boundries are colliding')
+            // context.fillStyle = 'blue'?
+            // stops the loop so because we already collied, no reason to continue looping over the rest of the boundaries
+            break;
+        }
+    }
+    foreground.draw()
     allowMoving = true
     player.moving = false
     if (keys.w.pressed) {
@@ -278,16 +295,39 @@ const checkCollidingOnKeyPress = ({ pixelCount }) => {
             // this checks if the  objs are colliding
             allowMoving = false
             colliding()
+            colliedDetected = true
             // context.fillStyle = 'blue'?
             // stops the loop so because we already collied, no reason to continue looping over the rest of the boundaries
             break;
         }
     }
 }
+const collideWarningElem = document.getElementById('colliedAlert');
 const colliding = () => {
-    // TODO div that popups saying that the user is going to restricted area
-    console.log('colliding')
+    op = 1
+    if (!colliedDetected) {
+        console.log('colliding')
+        collideWarningElem.style.display = 'flex'
+        setTimeout(() => {
+            fadeOutElem()
+        }, 2000)
+    }
+}
+let op = 1
+const fadeOutElem = () => {
+    colliedDetected = false
 
+    let timer = setInterval(() => {
+        if (op <= .01) {
+            clearInterval(timer)
+            collideWarningElem.style.display = 'none'
+            collideWarningElem.style.opacity = 1
+            op = 1
+        }
+        collideWarningElem.style.opacity = op
+        collideWarningElem.style.filter = 'alpha(opacity' + op * 100 + ')';
+        op -= op * .1
+    }, 100)
 }
 
 module.exports = context

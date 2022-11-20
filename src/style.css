@@ -15,3 +15,22 @@ body {
     padding: 0;
     margin: 0;
 }
+#colliedAlert{
+    height: 20vh;
+    width: 100vw;
+    position: absolute;
+    bottom: 0;
+    align-self: center;
+    justify-content: center;
+    display: none;
+}
+.alert{
+    background-color: #AF2413;
+    height: 50%;
+    display: flex;
+    align-items: center;
+    padding: 0px 20px;
+    border-radius: 10px;
+    color: #CAB7A1;
+    border: 1px solid black;
+}
