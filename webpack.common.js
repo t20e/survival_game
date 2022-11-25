@@ -31,19 +31,6 @@ module.exports = {
                     'style-loader', 'css-loader', 'sass-loader'
                 ]
             },
-            
-            {
-                type: 'javascript/auto',
-                test: /\.json$/,
-                use: [
-                    {
-                        loader: 'file-loader',
-                        options: {
-                            outputPath: 'assets'
-                        }
-                    }
-                ]
-            },
             {
                 // for babel loader, for better web connectivity to older browsers
                 test: /\.js$/,
@@ -61,7 +48,7 @@ module.exports = {
                 type: 'asset/resource',
             },
             {
-                test: /\.pdf$/,
+                test: /\.(pdf|mp3|json)$/,
                 use: [
                     {
                         loader: 'file-loader',

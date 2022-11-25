@@ -1,144 +1,49 @@
 import './style.css'
-import base_img_import from './assets/map/base_map.png'
-
-import { collisions } from './assets/map/collision_array'
-
-import { Boundary, Sprite, Enemy } from './classes'
+import { collisions } from './assets/map/collision_array.js'
+import zoomedOutMapPng from './assets/map/base_map_zoomed_out.png'
+import { Boundary, Sprite, Enemy } from './classes.js'
 import {
-    base_img, foregroundImg, playerImgDown, playerImgUp, playerImgRight,
-    playerImgLeft, goblinSprites
-} from './createImgs'
+    playerImgDown, playerImgUp, playerImgRight,
+    playerImgLeft, goblin
+} from './createImgs.js'
+import startAudio from './assets/audio/game_start.mp3'
+import gameOverAudio from './assets/audio/death_sound.mp3'
+import base_img from './assets/map/base_map.png'
+import foregroundImg from './assets/map/foreground_map.png'
 
-
+const menu = document.getElementById('menu')
+const survivalScreen = document.querySelector('.surviveScreen')
+const p = survivalScreen.children[0]
+p.style.display = 'none'
+// TODO make box around player and it enemy attacks that then that deals damage to player
+// TODO i can also probably use that box to keep enemy away from player
 //
 const canvas = document.querySelector('canvas')
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
-export const context = canvas.getContext('2d')
+const context = canvas.getContext('2d')
+context.imageSmoothingEnabled = false;
+let reqAnim;
 
-// map location
+let allowMoving;
 
-const offset = {
-    x: -1250,
-    y: -1500
-}
-const background = new Sprite({
-    position: {
-        x: offset.x,
-        y: offset.y,
-    },
-    image: base_img
-})
-const foreground = new Sprite({
-    position: {
-        x: offset.x,
-        y: offset.y,
-    },
-    image: foregroundImg
-})
-const testEnemy = new Enemy({
-    moving: true,
-    speed: 2,
-    image: goblinSprites.left.idle,
-    position: {
-        x: 1200,
-        y: 700
-    },
-    // position: {
-    //     x: canvas.width / 2 - 192 / 4 / 2,
-    //     y: canvas.height / 2 - 68 / 2
-    // },
-    frames: { max: 6 },
-    sprites: goblinSprites
-})
-const player = new Sprite({
-    image: playerImgRight,
-    frames: { max: 4 },
-    position: {
-        x: canvas.width / 2 - 192 / 4 / 2,
-        y: canvas.height / 2 - 68 / 2
-    },
-    sprites: {
-        up: playerImgUp,
-        left: playerImgLeft,
-        right: playerImgRight,
-        down: playerImgDown,
-    },
-})
-// console.log('x:', player.position.x - testEnemy.position.y, '\ny:', player.position.y - testEnemy.position.y)
-// console.log('\n plaeyer:', player.position, '\nenemy:', testEnemy.position)
-
+const enemies = []
+// moveables will move other objects when player moves to give the illusion that they are all moving
+const moveables = []
+let colliedDetected = false
 // boundaries
 const collisions_map = []
 const boundaries = []
+let gameStarted = false
+const zoomedOutMap = document.getElementById('zoomedOutMap')
+zoomedOutMap.src = zoomedOutMapPng
+let roundCount = 1
 
-const init = () => {
-    context.fillStyle = 'black'
-    context.fillRect(0, 0, canvas.width, canvas.height)
-    context.translate(canvas.width / 2, canvas.height / 2);
-    // give images opacity has to be done before adding imag to context
-    // context.globalAlpha = 0.9
-    context.drawImage(base_img, -base_img.width / 2, -base_img.height / 2);
-    context.translate(-canvas.width / 2, -canvas.height / 2)
-    base_img.src = ''
-    base_img.src = base_img_import
-    // TODO when user clicks play button it starts game 
-    base_img.onload = () => {
-        setTimeout(() => {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            play()
-        }, 1000)
-    }
-}
-
-// 
-base_img.onload = () => {
-    init()
-}
-
-const spawnAblePositions = [[-1650, -1500]]
-const play = () => {
-    // TODO make start sound
-    // TODO every new game the player is randomly spawned anywhere use the base_img to change its start position
-    // makes pixel images smoother
-    context.imageSmoothingEnabled = false;
-    addBoundaries()
-    window.addEventListener("keydown", (e) => {
-        switch (e.key) {
-            case 'w':
-                keys.w.pressed = true;
-                break;
-            case 'a':
-                keys.a.pressed = true;
-                break;
-            case 's':
-                keys.s.pressed = true;
-                break;
-            case 'd':
-                keys.d.pressed = true;
-                break;
-        }
-    })
-    window.addEventListener("keyup", (e) => {
-        switch (e.key) {
-            case 'w':
-                keys.w.pressed = false;
-                break;
-            case 'a':
-                keys.a.pressed = false;
-                break;
-            case 's':
-                keys.s.pressed = false;
-                break;
-            case 'd':
-                keys.d.pressed = false;
-                break;
-        }
-    })
-
-    //TODO generate enemies and other things and rount
-    animate()
-}
+document.querySelector('.playBtn').addEventListener('click', () => {
+    new Audio(startAudio).play();
+    transitionToPLay();
+})
+// keys pressed
 const keys = {
     w: {
         pressed: false
@@ -154,13 +59,155 @@ const keys = {
     },
 }
 
-// const testBoundary = new Boundary({
-//     position: {
-//         x: 400,
-//         y: 400
-//     }
+// map location
+const spawnAblePositions = [[-1650, -1500]]
+
+const offset = {
+    // offset the map
+    x: -1250,
+    y: -1500
+}
+const background = new Sprite({
+    type: 'background',
+    position: {
+        x: offset.x,
+        y: offset.y,
+    },
+    image: base_img
+})
+const foreground = new Sprite({
+    type: 'background',
+    position: {
+        x: offset.x,
+        y: offset.y,
+    },
+    image: foregroundImg
+})
+const testEnemy = new Enemy({...goblin})
+// const testEnemyTwo = new Enemy({
+
 // })
-const chechCollidingObjs = ({ objOne, collidingObj }) => {
+const player = new Sprite(
+    //     {
+    //     // type: 'player',
+    //     // image: playerImgDown,
+    //     // frames: { max: 4, scale: 6, offset: { y: 0, x: 0 } },
+    //     // position: {
+    //     //     x: canvas.width / 2 - 1200 / 4 / 2,
+    //     //     y: canvas.height / 2 - 550 / 2
+    //     // },
+    //     // speed: 3,
+    //     // sprites: {
+    //     //     up: playerImgUp,
+    //     //     left: playerImgLeft,
+    //     //     right: playerImgRight,
+    //     //     down: playerImgDown,
+    //     // },
+    //     // stats: {
+    //     //     health: 100,
+    //     //     attackDamage: 35
+    //     // },
+    //     // moving: true
+    //     // TODO test 
+    // }
+    // goblin
+    {
+        ...goblin,
+        position: {
+            x: canvas.width / 2 - 192 / 4 / 2,
+            y: canvas.height / 2 - 68 / 2
+        },
+        type:'player'
+    }
+)
+enemies.push(testEnemy)
+moveables.push(background, foreground, ...enemies)
+
+// console.log('x:', player.position.x - testEnemy.position.y, '\ny:', player.position.y - testEnemy.position.y)
+// console.log('\n plaeyer:', player.position, '\nenemy:', testEnemy.position)
+
+const init = () => {
+    // fill background black
+    // context.fillStyle = 'black'
+    // context.fillRect(0, 0, canvas.width, canvas.height)
+    context.translate(canvas.width / 2, canvas.height / 2);
+    // give images opacity has to be done before adding imag to context
+    // context.globalAlpha = .6
+    // context.drawImage(base_img, -base_img.width / 2, -base_img.height / 2);
+    context.translate(-canvas.width / 2, -canvas.height / 2)
+    animate()
+}
+// 
+const transitionToPLay = () => {
+    zoomedOutMap.style.display = 'none'
+    menu.style.display = 'none'
+    window.cancelAnimationFrame(reqAnim)
+    gameStarted = true
+    player.frames.scale = 3
+    player.position = {
+        x: canvas.width / 2 - 192 / 4 / 2,
+        y: canvas.height / 2 - 68 / 2
+    }
+    changeRoundText()
+    play()
+}
+const changeRoundText = () => {
+    p.style.display = 'flex'
+    p.classList.add('zoom-in')
+    setTimeout(() => {
+        p.classList.remove('zoom-in')
+        p.style.display = 'none'
+        p.innerHTML = `Round: ${roundCount += 1}`
+    }, 3000)
+}
+
+const play = () => {
+    // TODO when user clicks play button it starts game 
+    setTimeout(() => {
+        // context.globalAlpha = 1
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        // TODO make start sound
+        // TODO every new game the player is randomly spawned anywhere use the base_img to change its start position
+        // makes pixel images smoother
+        addBoundaries()
+        window.addEventListener("keydown", (e) => {
+            switch (e.key) {
+                case 'w':
+                    keys.w.pressed = true;
+                    break;
+                case 'a':
+                    keys.a.pressed = true;
+                    break;
+                case 's':
+                    keys.s.pressed = true;
+                    break;
+                case 'd':
+                    keys.d.pressed = true;
+                    break;
+            }
+        })
+        window.addEventListener("keyup", (e) => {
+            switch (e.key) {
+                case 'w':
+                    keys.w.pressed = false;
+                    break;
+                case 'a':
+                    keys.a.pressed = false;
+                    break;
+                case 's':
+                    keys.s.pressed = false;
+                    break;
+                case 'd':
+                    keys.d.pressed = false;
+                    break;
+            }
+        })
+    }, 1000)
+    //TODO generate enemies and other things and rount
+    animate()
+}
+
+const checkCollidingObjs = ({ objOne, collidingObj }) => {
     return (
         objOne.position.x + objOne.width >= collidingObj.position.x
         && objOne.position.x <= collidingObj.position.x + collidingObj.width
@@ -170,85 +217,7 @@ const chechCollidingObjs = ({ objOne, collidingObj }) => {
         && objOne.position.y + objOne.height >= collidingObj.position.y
     )
 }
-// moveables will move other objects when player moves to give the illusion that they are all moving
-const moveables = [background, foreground, testEnemy]
-let colliedDetected = false
-const animate = () => {
 
-    window.requestAnimationFrame(animate)
-    background.draw()
-    boundaries.forEach(boundary => {
-        boundary.draw()
-    })
-    player.draw()
-
-    testEnemy.moveToPlayer({ 'canvas': canvas })
-    let checkY;
-    let add
-    // TODO: check
-    for (let i = 0; i < boundaries.length; i++) {
-        const boundary = boundaries[i]
-        if (checkY) {
-            add = { x: boundary.position.x, y: boundary.position.y + 3 }
-        } else {
-            add = { x: boundary.position.x + 3, y: boundary.position.y }
-        }
-        if (chechCollidingObjs({
-            objOne: testEnemy, collidingObj: {
-                ...boundary, position: add
-            }
-        })) {
-            // this checks if the  objs are colliding
-            console.log('enemy and boundries are colliding')
-            // context.fillStyle = 'blue'?
-            // stops the loop so because we already collied, no reason to continue looping over the rest of the boundaries
-            break;
-        }
-    }
-    foreground.draw()
-    allowMoving = true
-    player.moving = false
-    if (keys.w.pressed) {
-        player.image = player.sprites.up
-        player.moving = true
-        checkCollidingOnKeyPress({ pixelCount: { 'y': { amount: 3 } } })
-        if (allowMoving) {
-            moveables.forEach(item => {
-                item.position.y = item.position.y + 3
-            })
-        }
-    }
-    if (keys.s.pressed) {
-        player.image = player.sprites.down
-        player.moving = true
-        checkCollidingOnKeyPress({ pixelCount: { 'y': { amount: -3 } } })
-        if (allowMoving) {
-            moveables.forEach(item => {
-                item.position.y = item.position.y - 3
-            })
-        }
-    }
-    if (keys.a.pressed) {
-        player.image = player.sprites.left
-        player.moving = true
-        checkCollidingOnKeyPress({ pixelCount: { 'x': { amount: 3 } } })
-        if (allowMoving) {
-            moveables.forEach(item => {
-                item.position.x = item.position.x + 3
-            })
-        }
-    }
-    if (keys.d.pressed) {
-        player.moving = true
-        player.image = player.sprites.right
-        checkCollidingOnKeyPress({ pixelCount: { 'y': { amount: -3 } } })
-        if (allowMoving) {
-            moveables.forEach(item => {
-                item.position.x = item.position.x - 3
-            })
-        }
-    }
-}
 const addBoundaries = () => {
     // loop over all in the collisions array to make boundaries, increment by 80 because my tiled map is 80 tiled wide
     for (let i = 0; i < collisions.length; i += 80) {
@@ -265,7 +234,8 @@ const addBoundaries = () => {
                     position: {
                         x: j * Boundary.width + offset.x,
                         y: i * Boundary.height + offset.y
-                    }
+                    },
+                    color: 'rgba(255,0,0,0.0)'
                 }))
             }
         })
@@ -273,9 +243,9 @@ const addBoundaries = () => {
     // console.log(boundaries)
     moveables.push(...boundaries)
 }
-let allowMoving;
+
 // pixelCount checks if player is about to collied by  pixels
-const checkCollidingOnKeyPress = ({ pixelCount }) => {
+const checkCollidingBoundary = ({ pixelCount, obj }) => {
     let checkY;
     pixelCount['y'] ? checkY = true : checkY = false
     let add;
@@ -287,16 +257,21 @@ const checkCollidingOnKeyPress = ({ pixelCount }) => {
         } else {
             add = { x: boundary.position.x + pixelCount['x']['amount'], y: boundary.position.y }
         }
-        if (chechCollidingObjs({
-            objOne: player, collidingObj: {
+        if (checkCollidingObjs({
+            objOne: obj, collidingObj: {
                 ...boundary, position: add
             }
         })) {
             // this checks if the  objs are colliding
-            allowMoving = false
+            if (obj.type === 'player') {
+                allowMoving = false
+            }
             colliding()
             colliedDetected = true
-            // context.fillStyle = 'blue'?
+            boundary.flicker = true
+            setTimeout(() => {
+                boundary.flicker = false
+            }, 1000)
             // stops the loop so because we already collied, no reason to continue looping over the rest of the boundaries
             break;
         }
@@ -329,5 +304,91 @@ const fadeOutElem = () => {
         op -= op * .1
     }, 100)
 }
+const checkKeyPress = () => {
+    if (keys.w.pressed) {
+        player.changeSprite('up', 'run')
+        player.moving = true
+        checkCollidingBoundary({ pixelCount: { 'y': { amount: 3 } }, obj: player })
+        if (allowMoving) {
+            moveables.forEach(item => {
+                item.position.y = item.position.y + player.speed
+            })
+        }
+    } else
+        if (keys.s.pressed) {
+            player.changeSprite('down', 'run')
+            player.moving = true
+            checkCollidingBoundary({ pixelCount: { 'y': { amount: -3 } }, obj: player })
+            if (allowMoving) {
+                moveables.forEach(item => {
+                    item.position.y = item.position.y - player.speed
+                })
+            }
+        } else
+            if (keys.a.pressed) {
+                player.changeSprite('left', 'run')
+                player.moving = true
+                checkCollidingBoundary({ pixelCount: { 'x': { amount: 3 } }, obj: player })
+                if (allowMoving) {
+                    moveables.forEach(item => {
+                        item.position.x = item.position.x + player.speed
+                    })
+                }
+            } else
+                if (keys.d.pressed) {
+                    player.changeSprite('right', 'run')
+                    player.moving = true
+                    checkCollidingBoundary({ pixelCount: { 'y': { amount: -3 } }, obj: player })
+                    if (allowMoving) {
+                        moveables.forEach(item => {
+                            item.position.x = item.position.x - player.speed
+                        })
+                    }
+                }
+}
+const gameOver = () => {
+    new Audio(gameOverAudio).play();
+    window.cancelAnimationFrame(reqAnim);
+    // then display how did they did that game and have a button to restart the game
+    // cancelAnimationFrame
+    // player has died
+    // bring back background image
+    // bring back play button
+    // restart everything 
+    // make round count = 1
+}
 
-module.exports = context
+
+const animate = () => {
+    reqAnim = window.requestAnimationFrame(animate)
+    context.clearRect(0,0, canvas.width, canvas.height)
+    if (player.stats.health <= 0) {
+        gameOver()
+        return;
+    }
+    if (!gameStarted) {
+        player.draw()
+        return
+    }
+    background.draw()
+    // boundaries.forEach(boundary => {
+    //     boundary.draw()
+    // })
+    player.draw()
+    enemies.forEach(enemy => {
+        // checkCollidingBoundary({ pixelCount: { 'y': { amount: 3 } }, obj: testEnemy })
+        enemy.moveToPlayer({ 'canvas': canvas, 'player': player })
+        // check colliding with other enemy
+    })
+    // foreground.draw()
+    allowMoving = true
+    player.moving = true
+
+    checkKeyPress()
+}
+
+    init()
+
+export {
+    context, canvas
+}
