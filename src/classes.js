@@ -1,4 +1,4 @@
-import { context, canvas } from './script.js'
+import { context, canvas, player } from './script.js'
 
 class Sprite {
     constructor({
@@ -62,32 +62,35 @@ class Sprite {
     getAroundBoundary() {
     }
     changeSprite(direction, mode) {
+        if (direction === player.direction) {
+            this.image = this.sprites[direction][mode]
+        }
         switch (direction) {
             case 'down':
-                if ('down' !== this.direction) {
+                if (this.direction !== 'down') {
                     this.direction = direction
-                    this.image = this.sprites[direction]['run']
+                    this.image = this.sprites[direction][mode]
                     this.frames.max = this.sprites.runFrames
                 }
                 break
             case 'up':
-                if ('up' !== this.direction) {
+                if (this.direction !== 'up') {
                     this.direction = direction
-                    this.image = this.sprites[direction]['run']
+                    this.image = this.sprites[direction][mode]
                     this.frames.max = this.sprites.runFrames
                 }
                 break
             case 'right':
-                if ('right' !== this.direction) {
+                if (this.direction !== 'right') {
                     this.direction = direction
-                    this.image = this.sprites[direction]['run']
+                    this.image = this.sprites[direction][mode]
                     this.frames.max = this.sprites.runFrames
                 }
                 break
             case 'left':
-                if ('left' !== this.direction) {
+                if (this.direction !== 'left') {
                     this.direction = direction
-                    this.image = this.sprites[direction]['run']
+                    this.image = this.sprites[direction][mode]
                     this.frames.max = this.sprites.runFrames
                 }
                 break
@@ -147,89 +150,72 @@ class Enemy extends Sprite {
         // the image takes up more then just one spirte so calculate the current position divide by individual sprite
         super.draw()
         // TODO fix enemy movement to play
-        // if (player.stats.health <= 0) {
-        //     this.sprites[this.directionToPlayer]['idle']
-        //     this.moving = false
-        //     return
-        // // }
-        // if (this.frames.elapsed % 5 === 0) {
-        //     const canvasCenterWidth = canvas.width / 2
-        //     const canvasCenterHeight = canvas.height / 2
-        //     let objFromCenter = {
-        //         x: canvasCenterWidth - this.position.x - 100,
-        //         y: canvasCenterHeight - this.position.y - 50
-        //     }
-        //     let directionOfTravel = { x: 0, y: 0 }
-        //     // if amount is less than zero meaning (canvasHalf 400 - enemy position 900) = -500
-        //     //  means i need to move enemy in either up or left and vice versa if position to right and down
-        //     // TODO if i can get the direction between canvas and enemy that i can better adjust
-        //     // there directionToPlayer
-        //     // const angleToCenter =( (Math.atan2(this.position.y, this.position.x) * 180 / Math.PI) + 360) % 360
-        //     // console.log(angleToCenter)
-        //     // if(angleToCenter < 30){
-        //     //     // this means look right or left
-        //     //     if(objFromCenter.x < 0 ){
-        //     //         this.directionToPlayer = 'left'
-        //     //     }else{
-        //     //         this.directionToPlayer = 'right'
-        //     //     }
-        //     // }else if (angleToCenter > 30){
-        //     //     // this means look down or up
-        //     //     if(objFromCenter.y < 0 ){
-        //     //         this.directionToPlayer = 'up'
-        //     //     }else{
-        //     //         this.directionToPlayer = 'down'
-        //     //     }
-        //     // }
-        //     // if (objFromCenter.y < 0) {
-        //     //     // move enemy y up
-        //     //     directionOfTravel.y -= this.speed
-        //     // } else {
-        //     //     directionOfTravel.y = this.speed
-        //     // }
-        //     // if (objFromCenter.x < 0) {
-        //     //     // move enemy x left
-        //     //     directionOfTravel.x -= this.speed
-        //     // } else {
-        //     //     directionOfTravel.x = this.speed
-        //     // }
-        //     if (objFromCenter.y < 0) {
-        //         // move enemy y up
-        //         directionOfTravel.y -= this.speed
-        //         this.directionToPlayer = 'up'
-        //     } else {
-        //         directionOfTravel.y = this.speed
-        //         this.directionToPlayer = 'down'
-        //     }
-        //     if (objFromCenter.x < 0) {
-        //         // move enemy x left
-        //         directionOfTravel.x -= this.speed
-        //         this.directionToPlayer = 'left'
-        //     } else {
-        //         directionOfTravel.x = this.speed
-        //         this.directionToPlayer = 'right'
-        //     }
-        //     // stop moving if the enemy is at center most likely attacking
-        //     // stops the enemy when its a center distance from player
-        //     // console.log(objFromCenter)
-        //     // TODO attacking player
-        //     // if (
-        //     //     objFromCenter.x < 50 && objFromCenter.x > -50
-        //     //     &&
-        //     //     objFromCenter.y < 50 && objFromCenter.y > -50
-        //     // ) {
-        //     //     this.image = this.sprites[this.directionToPlayer]['attack']
-        //     //     this.frames.max = this.sprites.attackFrames
-        //     //     this.attackingMode = true
-        //     //     this.attackPlayer(player)
-        //     //     return;
-        //     // } else {
-        //     //     this.image = this.sprites[this.directionToPlayer]['run']
-        //     //     this.frames.max = this.sprites.runFrames
-        //     // };
-        //     this.position.x += directionOfTravel.x
-        //     this.position.y += directionOfTravel.y
-        // }
+        if (player.stats.health <= 0) {
+            this.sprites[this.directionToPlayer]['idle']
+            this.moving = false
+            return
+        }
+        if (this.frames.elapsed % 5 === 0) {
+            const canvasCenterWidth = canvas.width / 2
+            const canvasCenterHeight = canvas.height / 2
+            let objFromCenter = {
+                x: canvasCenterWidth - this.position.x - 100,
+                y: canvasCenterHeight - this.position.y - 50
+            }
+            let directionOfTravel = { x: 0, y: 0 }
+            // if amount is less than zero meaning (canvasHalf 400 - enemy position 900) = -500
+            //  means i need to move enemy in either up or left and vice versa if position to right and down
+            // TODO if i can get the direction between canvas and enemy that i can better adjust
+            // there directionToPlayer
+            if (objFromCenter.y < 0) {
+                // move enemy y up
+                directionOfTravel.y -= this.speed
+            } else {
+                directionOfTravel.y = this.speed
+            }
+            if (objFromCenter.x < 0) {
+                // move enemy x left
+                directionOfTravel.x -= this.speed
+            } else {
+                directionOfTravel.x = this.speed
+            }
+            if (objFromCenter.y < 0) {
+                // move enemy y up
+                directionOfTravel.y -= this.speed
+                this.directionToPlayer = 'up'
+            } else {
+                directionOfTravel.y = this.speed
+                this.directionToPlayer = 'down'
+            }
+            if (objFromCenter.x < 0) {
+                // move enemy x left
+                directionOfTravel.x -= this.speed
+                this.directionToPlayer = 'left'
+            } else {
+                directionOfTravel.x = this.speed
+                this.directionToPlayer = 'right'
+            }
+            // stop moving if the enemy is at center most likely attacking
+            // stops the enemy when its a center distance from player
+            // console.log(objFromCenter)
+            // TODO attacking player
+            if (
+                objFromCenter.x < 50 && objFromCenter.x > -50
+                &&
+                objFromCenter.y < 50 && objFromCenter.y > -50
+            ) {
+                this.image = this.sprites[this.directionToPlayer]['attack']
+                this.frames.max = this.sprites.attackFrames
+                this.attackingMode = true
+                this.attackPlayer(player)
+                return;
+            } else {
+                this.image = this.sprites[this.directionToPlayer]['run']
+                this.frames.max = this.sprites.runFrames
+            };
+            this.position.x += directionOfTravel.x
+            this.position.y += directionOfTravel.y
+        }
     }
     attackPlayer(player) {
         // if(player.stats.health <= 0 ){
@@ -256,7 +242,8 @@ class Boundary {
     }
     draw() {
         // TODO when a player collieds with a block make an affect to ficker the red color of the block
-        context.fillStyle = this.flicker ? 'rgba(255,0,0,0.4)' : 'rgba(255,0,0,0.0)'
+        context.fillStyle = 'rgba(255,0,0,0.4)'
+        // context.fillStyle = this.flicker ? 'rgba(255,0,0,0.4)' : 'rgba(255,0,0,0.0)'
         context.fillRect(this.position.x, this.position.y, this.width, this.height)
     }
 }
