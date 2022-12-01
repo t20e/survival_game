@@ -1,7 +1,6 @@
-import { collisions } from './assets/map/collision_array.js'
 import { Boundary } from './classes.js'
-import { offset, moveables, allowMoving } from './script.js'
-
+import { moveables, allowMoving, colliding, setColliedDetected, boundaries, changeMovement } from './script.js'
+// todo create a map that all the thigs the player can go over like houses and draw it above player
 // keys pressed
 const keys = {
     w: {
@@ -21,7 +20,7 @@ const checkKeyPress = (player) => {
     if (keys.w.pressed) {
         player.changeSprite('up', 'run')
         player.moving = true
-        checkCollidingBoundary({ pixelCount: { 'y': { amount: 3 } }, obj: player })
+        checkCollidingBoundary({ pixelCount: { 'y': { amount: -40 } }, obj: player })
         if (allowMoving) {
             moveables.forEach(item => {
                 item.position.y = item.position.y + player.speed
@@ -30,7 +29,7 @@ const checkKeyPress = (player) => {
     } else if (keys.s.pressed) {
         player.changeSprite('down', 'run')
         player.moving = true
-        checkCollidingBoundary({ pixelCount: { 'y': { amount: -3 } }, obj: player })
+        checkCollidingBoundary({ pixelCount: { 'y': { amount: -60 } }, obj: player })
         if (allowMoving) {
             moveables.forEach(item => {
                 item.position.y = item.position.y - player.speed
@@ -48,7 +47,7 @@ const checkKeyPress = (player) => {
     } else if (keys.d.pressed) {
         player.changeSprite('right', 'run')
         player.moving = true
-        checkCollidingBoundary({ pixelCount: { 'y': { amount: -3 } }, obj: player })
+        checkCollidingBoundary({ pixelCount: { 'x': { amount: -40 } }, obj: player })
         if (allowMoving) {
             moveables.forEach(item => {
                 item.position.x = item.position.x - player.speed
@@ -59,10 +58,6 @@ const checkKeyPress = (player) => {
     }
 }
 
-const collisions_map = []
-let colliedDetected = false
-// boundaries
-const boundaries = []
 
 // pixelCount checks if player is about to collied by  pixels
 const checkCollidingBoundary = ({ pixelCount, obj }) => {
@@ -71,7 +66,7 @@ const checkCollidingBoundary = ({ pixelCount, obj }) => {
     let add;
     for (let i = 0; i < boundaries.length; i++) {
         const boundary = boundaries[i]
-        // check if its the y distance between obj and bountry that we are checking
+        // check if its the y distance between obj and boundary that we are checking
         if (checkY) {
             // add is checking if the two objects are going to collied in the future
             add = { x: boundary.position.x, y: boundary.position.y + pixelCount['y']['amount'] }
@@ -85,11 +80,11 @@ const checkCollidingBoundary = ({ pixelCount, obj }) => {
         })) {
             // this checks if the  objs are colliding
             if (obj.type === 'player') {
-                allowMoving = false
+                changeMovement(false)
             }
             console.log('colliding')
             colliding()
-            colliedDetected = true
+            setColliedDetected(true)
             boundary.flicker = true
             setTimeout(() => {
                 boundary.flicker = false
@@ -99,7 +94,6 @@ const checkCollidingBoundary = ({ pixelCount, obj }) => {
         }
     }
 }
-
 const checkCollidingObjs = ({ objOne, collidingObj }) => {
     return (
         objOne.position.x + objOne.width >= collidingObj.position.x
@@ -111,58 +105,5 @@ const checkCollidingObjs = ({ objOne, collidingObj }) => {
     )
 }
 
-const addBoundaries = () => {
-    // loop over all in the collisions array to make boundaries, increment by 80 because my tiled map is 80 tiled wide
-    for (let i = 0; i < collisions.length; i += 80) {
-        // loop through height
-        collisions_map.push(collisions.slice(i, 80 + i))
-        // console.log(collisions_map)
-    }
-    // console.log(collisions_map)
-    collisions_map.forEach((row, i) => {
-        row.forEach((Symbol, j) => {
-            // the symbol us equal to the collision red block in the collision array from json which was imported from tiled app
-            if (Symbol === 10509) {
-                boundaries.push(new Boundary({
-                    position: {
-                        x: j * Boundary.width + offset.x,
-                        y: i * Boundary.height + offset.y
-                    },
-                    color: 'rgba(255,0,0,0.0)'
-                }))
-            }
-        })
-    })
-    // console.log(boundaries)
-    moveables.push(...boundaries)
-}
 
-const collideWarningElem = document.getElementById('colliedAlert');
-const colliding = () => {
-    op = 1
-    if (!colliedDetected) {
-        console.log('colliding')
-        collideWarningElem.style.display = 'flex'
-        setTimeout(() => {
-            fadeOutElem()
-        }, 2000)
-    }
-}
-let op = 1
-const fadeOutElem = () => {
-    colliedDetected = false
-
-    let timer = setInterval(() => {
-        if (op <= .01) {
-            clearInterval(timer)
-            collideWarningElem.style.display = 'none'
-            collideWarningElem.style.opacity = 1
-            op = 1
-        }
-        collideWarningElem.style.opacity = op
-        collideWarningElem.style.filter = 'alpha(opacity' + op * 100 + ')';
-        op -= op * .1
-    }, 100)
-}
-
-export { checkKeyPress, checkCollidingBoundary, addBoundaries, keys, boundaries }
+export { checkKeyPress, checkCollidingBoundary, checkCollidingObjs, keys }

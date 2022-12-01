@@ -62,7 +62,8 @@ const goblin = {
         y:400
     },
     // TODO make the offset work the goblin is attacking is to big
-    frames: { max: 6, scale: 3, offset: { x: 14, y: 14 } },
+    // frames: { max: 6, scale: 3, offset: { x: 20, y: 40  } },
+    frames: { max: 6, scale: 3, offset: { x: 18, y: 36  } },
     stats: {
         health: 100,
         attackDamage: 15
