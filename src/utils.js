@@ -18,7 +18,7 @@ const keys = {
 }
 const checkKeyPress = (player) => {
     if (keys.w.pressed) {
-        player.changeSprite('up', 'run')
+        player.changeSprite('up', 'run', 'runFrames')
         player.moving = true
         checkCollidingBoundary({ pixelCount: { 'y': { amount: -40 } }, obj: player })
         if (allowMoving) {
@@ -27,7 +27,7 @@ const checkKeyPress = (player) => {
             })
         }
     } else if (keys.s.pressed) {
-        player.changeSprite('down', 'run')
+        player.changeSprite('down', 'run', 'runFrames')
         player.moving = true
         checkCollidingBoundary({ pixelCount: { 'y': { amount: -60 } }, obj: player })
         if (allowMoving) {
@@ -36,7 +36,7 @@ const checkKeyPress = (player) => {
             })
         }
     } else if (keys.a.pressed) {
-        player.changeSprite('left', 'run')
+        player.changeSprite('left', 'run', 'runFrames')
         player.moving = true
         checkCollidingBoundary({ pixelCount: { 'x': { amount: 3 } }, obj: player })
         if (allowMoving) {
@@ -45,7 +45,7 @@ const checkKeyPress = (player) => {
             })
         }
     } else if (keys.d.pressed) {
-        player.changeSprite('right', 'run')
+        player.changeSprite('right', 'run', 'runFrames')
         player.moving = true
         checkCollidingBoundary({ pixelCount: { 'x': { amount: -40 } }, obj: player })
         if (allowMoving) {
@@ -54,7 +54,7 @@ const checkKeyPress = (player) => {
             })
         }
     } else {
-        player.changeSprite(player.direction, 'idle')
+        player.changeSprite(player.direction, 'idle', 'runFrames')
     }
 }
 

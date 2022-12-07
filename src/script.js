@@ -4,7 +4,7 @@ import zoomedOutMapPng from './assets/map/base_map_zoomed_out.png'
 import { Boundary, Sprite, Enemy } from './classes.js'
 import {
     playerImgDown, playerImgUp, playerImgRight,
-    playerImgLeft, goblin
+    playerImgLeft, goblin, flying_bat
 } from './createImgs.js'
 import * as utils from './utils'
 
@@ -73,10 +73,8 @@ const foreground = new Sprite({
     },
     image: foregroundImg
 })
-const testEnemy = new Enemy({ ...goblin })
-// const testEnemyTwo = new Enemy({
+const testEnemy = new Enemy({ ...flying_bat })
 
-// })
 const player = new Sprite(
     //     {
     //     // type: 'player',
@@ -106,6 +104,7 @@ const player = new Sprite(
             x: canvas.width / 2 - 192 / 4 / 2,
             y: canvas.height / 2 - 68 / 2
         },
+        speed:10,
         type: 'player'
     }
 )
@@ -134,17 +133,17 @@ const init = () => {
     animate()
 }
 const addBoundaries = () => {
-    // loop over all in the collisions array to make boundaries, increment by 80 because my tiled map is 80 tiled wide
-    for (let i = 0; i < collisions.length; i += 80) {
+    // loop over all in the collisions array to make boundaries, increment by 40 because my tiled map is 80 tiled wide
+    for (let i = 0; i < collisions.length; i += 40) {
         // loop through height
-        collisions_map.push(collisions.slice(i, 80 + i))
+        collisions_map.push(collisions.slice(i, 40 + i))
         // console.log(collisions_map)
     }
     // console.log(collisions_map)
     collisions_map.forEach((row, i) => {
         row.forEach((Symbol, j) => {
             // the symbol us equal to the collision red block in the collision array from json which was imported from tiled app
-            if (Symbol === 10509) {
+            if (Symbol === 1601) {
                 boundaries.push(new Boundary({
                     position: {
                         x: j * Boundary.width + offset.x,
@@ -269,13 +268,14 @@ const gameOver = () => {
 const changeMovement = (boolean) => {
     allowMoving = boolean
 }
+// TODO on the higher path is not drawing infront od player
 
 const animate = () => {
     reqAnim = window.requestAnimationFrame(animate)
     context.clearRect(0, 0, canvas.width, canvas.height)
     if (player.stats.health <= 0) {
         gameOver()
-        return;
+        // return;
     }
     if (!gameStarted) {
         player.draw()
@@ -286,22 +286,13 @@ const animate = () => {
     boundaries.forEach(boundary => {
         boundary.draw()
     })
-    // if (player.position.x + player.width >= testBoundary.position.x
-    //     && player.position.x <= testBoundary.position.x + testBoundary.width
-    //     // // check if player and bottom of boundary are colliding
-    //     && player.position.y <= testBoundary.position.y + testBoundary.height
-    //     // // check if player and top of boundary are colliding
-    //     && player.position.y + player.height >= testBoundary.position.y
-    // ) {
-    //     console.log('u are colliding with boundary')
-    // }
     player.draw()
+    foreground.draw()
     enemies.forEach(enemy => {
     //     utils.checkCollidingBoundary({ pixelCount: { 'y': { amount: 3 } }, obj: enemy })
         enemy.moveToPlayer({ 'canvas': canvas, 'player': player })
     //     // check colliding with other enemy
     })
-    // foreground.draw()
     allowMoving = true
     utils.checkKeyPress(player)
 }

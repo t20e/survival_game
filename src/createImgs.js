@@ -31,6 +31,31 @@ import enemy_imgUpPngDeath from './assets/goblin/Up/GoblinUpDeath.png'
 import enemy_imgUpPngHurt from './assets/goblin/Up/GoblinUpHurt.png'
 import enemy_imgUpPngIdle from './assets/goblin/Up/GoblinUpIdle.png'
 import enemy_imgUpPngRun from './assets/goblin/Up/GoblinUpRun.png'
+// flying_bat
+// down 
+import flyingBatDownPngAttack from './assets/sprites/flyingBat/Down/GoblinRiderAttack03.png'
+import flyingBatDownPngDeath from './assets/sprites/flyingBat/Down/GoblinRiderDeath.png'
+import flyingBatDownPngHurt from './assets/sprites/flyingBat/Down/GoblinRiderHurt.png'
+import flyingBatDownPngIdle from './assets/sprites/flyingBat/Down/GoblinRiderIdle.png'
+import flyingBatDownPngRun from './assets/sprites/flyingBat/Down/GoblinRiderMove.png'
+//left
+import flyingBatLeftPngAttack from './assets/sprites/flyingBat/Left/GoblinRiderLeftAttack03.png'
+import flyingBatLeftPngDeath from './assets/sprites/flyingBat/Left/GoblinRiderLeftDeath.png'
+import flyingBatLeftPngHurt from './assets/sprites/flyingBat/Left/GoblinRiderLeftHurt.png'
+import flyingBatLeftPngIdle from './assets/sprites/flyingBat/Left/GoblinRiderLeftHurt.png'
+import flyingBatLeftPngRun from './assets/sprites/flyingBat/Left/GoblinRiderLeftMove.png'
+// sprites/flyingBat right
+import flyingBatRightPngAttack from './assets/sprites/flyingBat/Right/GoblinRiderRightAttack03.png'
+import flyingBatRightPngDeath from './assets/sprites/flyingBat/Right/GoblinRiderRightDeath.png'
+import flyingBatRightPngHurt from './assets/sprites/flyingBat/Right/GoblinRiderRightHurt.png'
+import flyingBatRightPngIdle from './assets/sprites/flyingBat/Right/GoblinRiderRightIdle.png'
+import flyingBatRightPngRun from './assets/sprites/flyingBat/Right/GoblinRiderRightMove.png'
+//up
+import flyingBatUpPngAttack from './assets/sprites/flyingBat/Up/GoblinRiderUpAttack03.png'
+import flyingBatUpPngDeath from './assets/sprites/flyingBat/Up/GoblinRiderUpDeath.png'
+import flyingBatUpPngHurt from './assets/sprites/flyingBat/Up/GoblinRiderUpHurt.png'
+import flyingBatUpPngIdle from './assets/sprites/flyingBat/Up/GoblinRiderUpIdle.png'
+import flyingBatUpPngRun from './assets/sprites/flyingBat/Up/GoblinRiderUpMove.png'
 
 const base_img = new Image()
 base_img.src = base_mapPng
@@ -104,7 +129,60 @@ const goblin = {
         }
     }
 }
+const flying_bat = {
+    type:'enemy',
+    moving: true,
+    speed: 3,
+    image: flyingBatDownPngIdle,
+    position: {
+        //TODO new location for every enemy
+        x:200,
+        y:400
+    },
+    // TODO make the offset work the goblin is attacking is to big
+    // frames: { max: 6, scale: 3, offset: { x: 20, y: 40  } },
+    frames: { max: 5, scale: 2, offset: { x: 0, y: 0 } },
+    stats: {
+        health: 100,
+        attackDamage: 15
+    },
+    sprites: {
+        attackFrames: 5,
+        deathFrames: 10,
+        hurtFrames: 4,
+        idleFrames: 5,
+        runFrames: 4,
+        up: {
+            attack: flyingBatUpPngAttack,
+            death: flyingBatUpPngDeath,
+            hurt: flyingBatUpPngHurt,
+            idle: flyingBatUpPngIdle,
+            run: flyingBatUpPngRun
+        },
+        down: {
+            attack: flyingBatDownPngAttack,
+            death: flyingBatDownPngDeath,
+            hurt: flyingBatDownPngHurt,
+            idle: flyingBatDownPngIdle,
+            run: flyingBatDownPngRun
+        },
+        right: {
+            attack: flyingBatRightPngAttack,
+            death: flyingBatRightPngDeath,
+            hurt: flyingBatRightPngHurt,
+            idle: flyingBatRightPngIdle,
+            run: flyingBatRightPngRun
+        },
+        left: {
+            death: flyingBatLeftPngDeath,
+            attack: flyingBatLeftPngAttack,
+            hurt: flyingBatLeftPngHurt,
+            idle: flyingBatLeftPngIdle,
+            run: flyingBatLeftPngRun
+        }
+    }
+}
 export {
     base_img, foregroundImg, playerImgDown, playerImgUp, playerImgRight,
-    playerImgLeft, goblin
+    playerImgLeft, goblin,flying_bat
 }
