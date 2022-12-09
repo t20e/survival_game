@@ -48,7 +48,19 @@ module.exports = {
                 type: 'asset/resource',
             },
             {
-                test: /\.(pdf|mp3|json)$/,
+                type: 'javascript/auto',
+                test: /\.json$/,
+                use: [
+                    {
+                        loader: 'file-loader',
+                        options: {
+                            outputPath: 'assets'
+                        }
+                    }
+                ]
+            },
+            {
+                test: /\.(pdf|mp3)$/,
                 use: [
                     {
                         loader: 'file-loader',

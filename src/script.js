@@ -6,7 +6,7 @@ import {
     playerImgDown, playerImgUp, playerImgRight,
     playerImgLeft, goblin, flying_bat
 } from './createImgs.js'
-import * as utils from './utils'
+import * as Utils from './utils'
 
 import startAudio from './assets/audio/game_start.mp3'
 import gameOverAudio from './assets/audio/death_sound.mp3'
@@ -14,12 +14,9 @@ import base_img from './assets/map/base_map.png'
 import foregroundImg from './assets/map/foreground_map.png'
 
 const menu = document.getElementById('menu')
-const survivalScreen = document.querySelector('.surviveScreen')
+const survivalScreen = document.querySelector('.roundStart')
 const p = survivalScreen.children[0]
 p.style.display = 'none'
-// TODO make box around player and it enemy attacks that then that deals damage to player
-// TODO i can also probably use that box to keep enemy away from player
-//
 const canvas = document.querySelector('canvas')
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
@@ -48,22 +45,17 @@ document.querySelector('.playBtn').addEventListener('click', () => {
     new Audio(startAudio).play();
     transitionToPLay();
 })
-// map location
-const spawnAblePositions = [[-1650, -1500]]
 
-const offset = {
-    // offset the map
-    x: -1250,
-    y: -1500
-}
 const background = new Sprite({
     type: 'background',
-    position: {
-        x: offset.x,
-        y: offset.y,
-    },
+    position: Utils.spawnPlayerAnyWhere(),
     image: base_img
 })
+const offset = {
+    // offset the map
+    x: background.position.x,
+    y: background.position.y,
+}
 
 const foreground = new Sprite({
     type: 'background',
@@ -101,11 +93,17 @@ const player = new Sprite(
     {
         ...goblin,
         position: {
-            x: canvas.width / 2 - 192 / 4 / 2,
-            y: canvas.height / 2 - 68 / 2
+            // the 12 is to grow because we are scaling
+            x: canvas.width / 2 - (192 * 12) / 4 / 2,
+            y: canvas.height / 2 - (68 * 12) / 2
         },
-        speed:10,
-        type: 'player'
+        // position: {
+        //     x: canvas.width / 2 - 192 / 4 / 2,
+        //     y: canvas.height / 2 - 68 / 2
+        // },
+        speed: 2.5,
+        type: 'player',
+        frames: { ...goblin.frames, scale: 12 }
     }
 )
 enemies.push(testEnemy)
@@ -116,10 +114,6 @@ const testBoundary = new Boundary({
     }
 })
 moveables.push(background, foreground, ...enemies, testBoundary)
-
-
-// console.log('x:', player.position.x - testEnemy.position.y, '\ny:', player.position.y - testEnemy.position.y)
-// console.log('\n plaeyer:', player.position, '\nenemy:', testEnemy.position)
 
 const init = () => {
     // fill background black
@@ -158,7 +152,7 @@ const addBoundaries = () => {
     moveables.push(...boundaries)
 }
 
-const setColliedDetected = (boolean)=>{
+const setColliedDetected = (boolean) => {
     colliedDetected = boolean
 }
 const colliding = () => {
@@ -198,6 +192,10 @@ const transitionToPLay = () => {
         x: canvas.width / 2 - 192 / 4 / 2,
         y: canvas.height / 2 - 68 / 2
     }
+    // player.position = {
+    //     x: canvas.width / 2 - 192 / 4 / 2,
+    //     y: canvas.height / 2 - 68 / 2
+    // }
     changeRoundText()
     play()
 }
@@ -215,48 +213,52 @@ const play = () => {
     setTimeout(() => {
         // context.globalAlpha = 1
         context.clearRect(0, 0, canvas.width, canvas.height);
-        // TODO every new game the player is randomly spawned anywhere use the base_img to change its start position
         // makes pixel images smoother
         window.addEventListener("keydown", (e) => {
             switch (e.key) {
                 case 'w':
-                    utils.keys.w.pressed = true;
+                    Utils.keys.w.pressed = true;
                     break;
                 case 'a':
-                    utils.keys.a.pressed = true;
+                    Utils.keys.a.pressed = true;
                     break;
                 case 's':
-                    utils.keys.s.pressed = true;
+                    Utils.keys.s.pressed = true;
                     break;
                 case 'd':
-                    utils.keys.d.pressed = true;
+                    Utils.keys.d.pressed = true;
                     break;
             }
         })
         window.addEventListener("keyup", (e) => {
             switch (e.key) {
                 case 'w':
-                    utils.keys.w.pressed = false;
+                    Utils.keys.w.pressed = false;
                     break;
                 case 'a':
-                    utils.keys.a.pressed = false;
+                    Utils.keys.a.pressed = false;
                     break;
                 case 's':
-                    utils.keys.s.pressed = false;
+                    Utils.keys.s.pressed = false;
                     break;
                 case 'd':
-                    utils.keys.d.pressed = false;
+                    Utils.keys.d.pressed = false;
                     break;
             }
         })
     }, 1000)
+    Utils.startGame()
     //TODO generate enemies and other things and rount
     animate()
 }
 
+let isGameOver = false
 const gameOver = () => {
+    // TODO
+    isGameOver = true;
     new Audio(gameOverAudio).play();
-    window.cancelAnimationFrame(reqAnim);
+    // window.cancelAnimationFrame(reqAnim);
+    // restart the generate a new position for player
     // then display how did they did that game and have a button to restart the game
     // cancelAnimationFrame
     // player has died
@@ -268,12 +270,11 @@ const gameOver = () => {
 const changeMovement = (boolean) => {
     allowMoving = boolean
 }
-// TODO on the higher path is not drawing infront od player
 
 const animate = () => {
     reqAnim = window.requestAnimationFrame(animate)
     context.clearRect(0, 0, canvas.width, canvas.height)
-    if (player.stats.health <= 0) {
+    if (player.stats.health <= 0 && !isGameOver ) {
         gameOver()
         // return;
     }
@@ -289,16 +290,18 @@ const animate = () => {
     player.draw()
     foreground.draw()
     enemies.forEach(enemy => {
-    //     utils.checkCollidingBoundary({ pixelCount: { 'y': { amount: 3 } }, obj: enemy })
+        //     Utils.checkCollidingBoundary({ pixelCount: { 'y': { amount: 3 } }, obj: enemy })
         enemy.moveToPlayer({ 'canvas': canvas, 'player': player })
-    //     // check colliding with other enemy
+        //     // check colliding with other enemy
     })
     allowMoving = true
-    utils.checkKeyPress(player)
+    if (player.currAction === undefined) {
+        Utils.checkKeyPress(player)
+    }
 }
 
 init()
 
 export {
-    context, canvas, offset, moveables, player, changeMovement, colliding, setColliedDetected,allowMoving, boundaries
+    context, canvas, offset, moveables, player, changeMovement, colliding, setColliedDetected, allowMoving, boundaries
 }

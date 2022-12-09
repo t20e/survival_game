@@ -31,6 +31,7 @@ import enemy_imgUpPngDeath from './assets/goblin/Up/GoblinUpDeath.png'
 import enemy_imgUpPngHurt from './assets/goblin/Up/GoblinUpHurt.png'
 import enemy_imgUpPngIdle from './assets/goblin/Up/GoblinUpIdle.png'
 import enemy_imgUpPngRun from './assets/goblin/Up/GoblinUpRun.png'
+
 // flying_bat
 // down 
 import flyingBatDownPngAttack from './assets/sprites/flyingBat/Down/GoblinRiderAttack03.png'
@@ -42,7 +43,7 @@ import flyingBatDownPngRun from './assets/sprites/flyingBat/Down/GoblinRiderMove
 import flyingBatLeftPngAttack from './assets/sprites/flyingBat/Left/GoblinRiderLeftAttack03.png'
 import flyingBatLeftPngDeath from './assets/sprites/flyingBat/Left/GoblinRiderLeftDeath.png'
 import flyingBatLeftPngHurt from './assets/sprites/flyingBat/Left/GoblinRiderLeftHurt.png'
-import flyingBatLeftPngIdle from './assets/sprites/flyingBat/Left/GoblinRiderLeftHurt.png'
+import flyingBatLeftPngIdle from './assets/sprites/flyingBat/Left/GoblinRiderLeftIdle.png'
 import flyingBatLeftPngRun from './assets/sprites/flyingBat/Left/GoblinRiderLeftMove.png'
 // sprites/flyingBat right
 import flyingBatRightPngAttack from './assets/sprites/flyingBat/Right/GoblinRiderRightAttack03.png'
@@ -77,18 +78,15 @@ playerImgLeft.src = playerImgLeftPng
 
 
 const goblin = {
-    type:'enemy',
+    type: 'enemy',
     moving: true,
     speed: 2,
     image: enemy_imgDownPngIdle,
     position: {
-        //TODO new location for every enemy
-        x:200,
-        y:400
+        x: 200,
+        y: 400
     },
-    // TODO make the offset work the goblin is attacking is to big
-    // frames: { max: 6, scale: 3, offset: { x: 20, y: 40  } },
-    frames: { max: 6, scale: 3, offset: { x: 18, y: 36  } },
+    frames: { max: 6, scale: 3, offset: { x: 18, y: 36 } },
     stats: {
         health: 100,
         attackDamage: 15
@@ -130,21 +128,25 @@ const goblin = {
     }
 }
 const flying_bat = {
-    type:'enemy',
+    type: 'enemy',
     moving: true,
     speed: 3,
     image: flyingBatDownPngIdle,
     position: {
         //TODO new location for every enemy
-        x:200,
-        y:400
+        x: 200,
+        y: 400
     },
-    // TODO make the offset work the goblin is attacking is to big
-    // frames: { max: 6, scale: 3, offset: { x: 20, y: 40  } },
-    frames: { max: 5, scale: 2, offset: { x: 0, y: 0 } },
+    frames: {
+        max: 5, scale: 2, 
+        offset: {
+            // offset will crop the image so to remove the padding ie empty white space
+            x: 0, y: 0
+        }
+    },
     stats: {
         health: 100,
-        attackDamage: 15
+        attackDamage: 12
     },
     sprites: {
         attackFrames: 5,
@@ -184,5 +186,5 @@ const flying_bat = {
 }
 export {
     base_img, foregroundImg, playerImgDown, playerImgUp, playerImgRight,
-    playerImgLeft, goblin,flying_bat
+    playerImgLeft, goblin, flying_bat
 }

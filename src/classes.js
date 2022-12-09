@@ -1,5 +1,5 @@
 import { context, canvas, player } from './script.js'
-
+import { editHealthBar } from './utils'
 class Sprite {
     constructor({
         position, image, moving = false, speed, stats,
@@ -7,11 +7,13 @@ class Sprite {
     }) {
         this.stats = stats
         this.type = type
+        this.currAction = undefined
         this.sprites = sprites
         this.direction = 'down'
         this.position = position
         this.moving = moving
         this.speed = speed
+        this.attackingMode = false
         this.frames = { ...frames, val: 0, elapsed: 0 }
         this.image = new Image()
         this.image.src = image
@@ -34,7 +36,8 @@ class Sprite {
         }
     }
     draw() {
-
+        // if(this.type === 'player')
+        // console.log(this.image)
         context.drawImage(
             this.image,
             // the next two parameters are also used to animate a sprite image
@@ -49,19 +52,13 @@ class Sprite {
             (this.image.width / this.frames.max) * this.frames.scale, //adjust scale the cutout image x
             this.image.height * this.frames.scale, //adjust scale the cutout image y
         )
-        // context.strokeRect(934,428.5,10,10)
-        // the position below is what the enemy show moved to so it can attack plater
-        context.strokeRect(this.position.x + (this.image.width / this.frames.max), this.position.y + (this.image.height), 10, 10)
-        // context.strokeRect(
-        //     this.position.x, this.position.y,
-        //     // this.position.x - this.frames.offset.x, this.position.y - this.frames.offset.y,
-        //     (this.image.width / this.frames.max) * this.frames.scale,
-        //     this.image.height * this.frames.scale
-        // )
+        // create a strok at the center of the sprite 
+        // context.strokeRect(this.position.x + (this.image.width / this.frames.max), this.position.y + (this.image.height), 10, 10)
         if (!this.moving) return
         this.animate()
     }
     animate() {
+        // animate the image by making look like the entity is moving
         if (this.frames.max > 1) {
             this.frames.elapsed++
         }
@@ -77,17 +74,13 @@ class Sprite {
     }
     changeSprite(direction, mode, whichFrames) {
         let changeWidthHeight = false
-        if (this.type === 'enemy') {
-            // to make the enemy be able to attack and move in the same direction did this
-            this.frames.max = this.sprites[whichFrames]
-        }
+        // if (this.type === 'enemy') {
+        //     // to make the enemy be able to attack and move in the same direction did this
+        //     this.frames.max = this.sprites[whichFrames]
+        // }
         switch (direction) {
-            case this.direction:
-                // to make it idle when user lefts go of key
-                this.image = this.sprites[direction][mode]
-                break;
             case 'down':
-                if (this.direction !== 'down') {
+                if (this.image !== this.sprites[direction][mode]) {
                     this.direction = direction
                     this.image = this.sprites[direction][mode]
                     this.frames.max = this.sprites[whichFrames]
@@ -95,7 +88,7 @@ class Sprite {
                 }
                 break;
             case 'up':
-                if (this.direction !== 'up') {
+                if (this.image !== this.sprites[direction][mode]) {
                     this.direction = direction
                     this.image = this.sprites[direction][mode]
                     this.frames.max = this.sprites[whichFrames]
@@ -103,7 +96,7 @@ class Sprite {
                 }
                 break;
             case 'right':
-                if (this.direction !== 'right') {
+                if (this.image !== this.sprites[direction][mode]) {
                     this.direction = direction
                     this.image = this.sprites[direction][mode]
                     this.frames.max = this.sprites[whichFrames]
@@ -111,48 +104,23 @@ class Sprite {
                 }
                 break;
             case 'left':
-                if (this.direction !== 'left') {
+                if (this.image !== this.sprites[direction][mode]) {
                     this.direction = direction
                     this.image = this.sprites[direction][mode]
                     this.frames.max = this.sprites[whichFrames]
                     changeWidthHeight = true
                 }
                 break;
-            // case 'attack':
-            //     this.direction = direction
-            //     this.image = this.sprites[direction][mode]
-            //     this.frames.max = this.sprites.attackFrames
-            //     changeWidthHeight = true
-            //     break
-
-            // case 'jump':
-            //   if (this.image !== this.sprites.jump.image) {
-            //     this.image = this.sprites.jump.image
-            //     this.framesMax = this.sprites.jump.framesMax
-            //     this.framesCurrent = 0
-            //   }
-            //   break
-            // case 'fall':
-            //   if (this.image !== this.sprites.fall.image) {
-            //     this.image = this.sprites.fall.image
-            //     this.framesMax = this.sprites.fall.framesMax
-            //     this.framesCurrent = 0
-            //   }
-            //   break
-            // case 'takeHit':
-            //   if (this.image !== this.sprites.takeHit.image) {
-            //     this.image = this.sprites.takeHit.image
-            //     this.framesMax = this.sprites.takeHit.framesMax
-            //     this.framesCurrent = 0
-            //   }
-            //   break
-            // case 'death':
-            //   if (this.image !== this.sprites.death.image) {
-            //     this.image = this.sprites.death.image
-            //     this.framesMax = this.sprites.death.framesMax
-            //     this.framesCurrent = 0
-            //   }
-            //   break
+            case 'special':
+                // handle attacks and hurt modes 
+                this.currAction = 'hurt'
+                this.image = this.sprites[this.direction][mode]
+                this.frames.max = this.sprites[whichFrames]
+                changeWidthHeight = true
+                setTimeout(() => {
+                    this.currAction = undefined
+                }, 400)
+                break;
         }
         if (changeWidthHeight) {
             // this.image.onload = () => {
@@ -168,16 +136,14 @@ class Enemy extends Sprite {
     constructor(...args) {
         super(...args)
         this.directionToPlayer = 'left'
-        this.attackingMode = false
     }
     test() {
     }
     moveToPlayer({ canvas, player }) {
         super.draw()
-        // TODO fix enemy movement to play
         if (player.stats.health <= 0) {
-            this.sprites[this.directionToPlayer]['idle']
-            // this.moving = false
+            this.image = this.sprites[this.directionToPlayer]['idle']
+            this.frames.max = this.sprites.idleFrames
             return
         }
         if (this.frames.elapsed % 5 === 0) {
@@ -193,7 +159,6 @@ class Enemy extends Sprite {
                 x: this.position.x - player.position.x + (player.image.width / player.frames.max),
                 y: this.position.y - player.position.y + (player.image.height)
             }
-            // TODO attack player
             if (
                 amountToMoveTo.x < 100 && amountToMoveTo.y < 100 &&
                 amountToMoveTo.x > -100 && amountToMoveTo.y > -100
@@ -201,6 +166,7 @@ class Enemy extends Sprite {
                 // console.log('close to player')
                 pathToPlayer = { ...pathToPlayer, speed: 0, mode: 'attack', whichFrames: 'attackFrames' }
                 this.attackPlayer(player)
+                this.attackingMode = true
             }
             if (amountToMoveTo.x > 0) {
                 // move enemy to the left
@@ -228,33 +194,30 @@ class Enemy extends Sprite {
                 }
                 pathToPlayer.y = pathToPlayer.speed
             }
-            // console.info(pathToPlayer)
-            // console.log(amountToMoveTo)
             this.position.x += pathToPlayer.x
             this.position.y += pathToPlayer.y
             // console.log(pathToPlayer.direction)
-            // ('right', 'run', 'runFrames')
             // console.log(this.frames.max)
             this.changeSprite(pathToPlayer.direction, pathToPlayer.mode, pathToPlayer.whichFrames)
         }
     }
     attackPlayer(player) {
         if (player.stats.health <= 0) {
+            editHealthBar(0 + '%')
             console.log('player died')
             return
         }
-        if (this.frames.elapsed % 100 === 0) {
-            player.stats.health -= this.stats.attackDamage
-            console.log(player.stats.health)
-            this.attackingMode = false
+        if (this.frames.elapsed % 20 === 0) {
+            if (this.attackingMode) {
+                player.stats.health -= this.stats.attackDamage
+                editHealthBar(player.stats.health + '%')
+                player.changeSprite('special', 'hurt', 'hurtFrames')
+                this.attackingMode = false
+            }
         }
     }
 }
 
-const getDiffBetweenXY = (position) => {
-    let closerToZeroZ = 0 - position.x
-    let closerToZeroY = 0 - position.y
-}
 class Boundary {
     // 16 pixels times 4 (the zoomed in amount is 400%) = 64
     static width = 64

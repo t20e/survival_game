@@ -17,7 +17,8 @@ body {
     padding: 0;
     margin: 0;
 }
-#zoomedOutMap{
+
+#zoomedOutMap {
     pointer-events: none;
     height: 100vh;
     width: auto;
@@ -28,6 +29,7 @@ body {
     z-index: -10;
     opacity: 1;
 }
+
 #menu {
     height: 20vh;
     width: 100vw;
@@ -41,7 +43,7 @@ body {
     height: 3rem;
     width: 6rem;
     border-radius: 20px;
-    background-color: #AC3834;
+    background-color: red;
     color: #CAB7A1;
     border: 1px solid #CAB7A1;
     cursor: pointer;
@@ -73,7 +75,8 @@ body {
     border: 1px solid black;
 }
 
-.surviveScreen {
+.roundStart {
+    user-select: none;
     height: 100vh;
     width: 100vw;
     position: absolute;
@@ -91,16 +94,18 @@ body {
     0% {
         -webkit-transform: scale(1);
     }
+
     70% {
         -webkit-transform: scale(.5);
     }
+
     100% {
         -webkit-transform: scale(.5);
     }
 }
 
 
-.surviveScreen p {
+.roundStart p {
     width: 200%;
     height: 200%;
     text-align: center;
@@ -111,6 +116,60 @@ body {
     color: red;
 }
 
-.surviveScreen p.zoom-in {
+.roundStart p.zoom-in {
     -webkit-animation: zoomIn 5s 1 forwards;
+}
+
+#healthBar {
+    user-select: none;
+    display: none;
+    position: absolute;
+    top: 4rem;
+    left: 5rem;
+    z-index: 10000;
+}
+
+#healthBar>div {
+    height: 40px;
+    width: 300px;
+    background-color: whitesmoke;
+    border-bottom-right-radius: 10px;
+    border-top-right-radius: 10px;
+    padding: 2px;
+    position: relative;
+    z-index: -1;
+    top: -2.05rem;
+    left: 2.5rem;
+    padding-left: .5rem;
+}
+
+#healthBar img {
+    height: 90px;
+}
+
+.health {
+    border-bottom-right-radius: 10px;
+    border-top-right-radius: 10px;
+    background-color: red;
+    height: 100%;
+    width: 100%;
+}
+
+.movementGestureCont {
+    display: none;
+    user-select: none;
+    pointer-events: none;
+    position: absolute;
+    bottom: 0;
+    z-index: 30;
+    height: 300px;
+    width: 100vw;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10rem;
+}
+
+.movementGestureCont div {
+    height: 60%;
+    width: 300px;
 }

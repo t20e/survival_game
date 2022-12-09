@@ -11,7 +11,14 @@
 
 <body>
     <canvas></canvas>
-    <img id="zoomedOutMap"  alt="background map">
+    <img id="zoomedOutMap" alt="background map">
+    <div id="healthBar">
+        <img src="./assets/other/heart.png" alt="heart img">
+        <div>
+            <div class="health"></div>
+            <!-- <progress id="health" value="100" max="100"></progress> -->
+        </div>
+    </div>
     <div id="menu">
         <div class="idleSprite"></div>
         <button class="playBtn">play</button>
@@ -21,10 +28,14 @@
             <pre>(((     you cant go that way!    )))</pre>
         </div>
     </div>
-    <div class="surviveScreen">
+    <div class="roundStart">
         <p>
             Survive <br> Round: 1
         </p>
+    </div>
+    <div class="movementGestureCont">
+        <div class="keysMovement"></div>
+        <div class="mouseMovement"></div>
     </div>
 </body>
 

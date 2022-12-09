@@ -1,6 +1,9 @@
 import { Boundary } from './classes.js'
 import { moveables, allowMoving, colliding, setColliedDetected, boundaries, changeMovement } from './script.js'
-// todo create a map that all the thigs the player can go over like houses and draw it above player
+import Lottie from 'lottie-web'
+import keysGesture from './assets/other/keys.json'
+import mouseGesture from './assets/other/mouse.json'
+
 // keys pressed
 const keys = {
     w: {
@@ -104,6 +107,53 @@ const checkCollidingObjs = ({ objOne, collidingObj }) => {
         && objOne.position.y + objOne.height >= collidingObj.position.y
     )
 }
+const healthBar = document.querySelector('.health')
+const editHealthBar = (percentage) => {
+    healthBar.style.width = percentage
+}
+const startGame = () => {
+    // enable all things that are needed for the game such as the health bar etc
+    const healthDiv = document.getElementById('healthBar')
+    healthDiv.style.display = 'block'
+    movementGestureCont.style.display = 'flex'
+    setTimeout(() => {
+        movementGestureCont.style.display = 'none'
+    }, 10000)
+}
+const mouseGestContainer = document.querySelector('.mouseMovement')
+const keysContainer = document.querySelector('.keysMovement')
+const movementGestureCont = document.querySelector('.movementGestureCont')
+
+// load lottie files
+Lottie.loadAnimation({
+    container: mouseGestContainer,
+    renderer: 'svg',
+    loop: true,
+    autoplay: true,
+    path: mouseGesture
+})
+Lottie.loadAnimation({
+    container: keysContainer,
+    renderer: 'svg',
+    loop: true,
+    autoplay: true,
+    path: keysGesture
+})
 
 
-export { checkKeyPress, checkCollidingBoundary, checkCollidingObjs, keys }
+// map location
+const spawnAblePositions = [
+    [-200, -400],
+    [-1000, -350],
+    [0, -1300],
+    [-700, -1400]
+]
+
+const spawnPlayerAnyWhere = () => {
+    const position = spawnAblePositions[Math.floor(Math.random() * spawnAblePositions.length)]
+    return {
+        x: position[0],
+        y: position[1],
+    }
+}
+export { checkKeyPress, checkCollidingBoundary, checkCollidingObjs, keys, editHealthBar, startGame,spawnPlayerAnyWhere }
