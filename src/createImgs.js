@@ -1,10 +1,6 @@
 import base_mapPng from './assets/map/base_map.png'
 import foregroundImport from './assets/map/foreground_map.png'
 // player imgs
-import player_imgDown from './assets/test_player/playerDown.png'
-import playerImgUpPng from './assets/test_player/playerUp.png'
-import playerImgRightPng from './assets/test_player/playerRight.png'
-import playerImgLeftPng from './assets/test_player/playerLeft.png'
 
 // goblin
 // down 
@@ -58,23 +54,24 @@ import flyingBatUpPngHurt from './assets/sprites/flyingBat/Up/GoblinRiderUpHurt.
 import flyingBatUpPngIdle from './assets/sprites/flyingBat/Up/GoblinRiderUpIdle.png'
 import flyingBatUpPngRun from './assets/sprites/flyingBat/Up/GoblinRiderUpMove.png'
 
+
+// bullet
+import bulletLeft from './assets/bullet/bullet_left.png'
+import bulletDown from './assets/bullet/bullet_down.png'
+import bulletRight from './assets/bullet/bullet_right.png'
+import bulletUp from './assets/bullet/bullet_up.png'
+
+const bulletObj = {
+    left: bulletLeft,
+    right: bulletRight,
+    down: bulletDown,
+    up: bulletUp,
+}
 const base_img = new Image()
 base_img.src = base_mapPng
-
 const foregroundImg = new Image()
 foregroundImg.src = foregroundImport
-// down
-const playerImgDown = new Image()
-playerImgDown.src = player_imgDown
-// up
-const playerImgUp = new Image()
-playerImgUp.src = playerImgUpPng
-// right
-const playerImgRight = new Image()
-playerImgRight.src = playerImgRightPng
-// left
-const playerImgLeft = new Image()
-playerImgLeft.src = playerImgLeftPng
+
 
 
 const goblin = {
@@ -88,7 +85,7 @@ const goblin = {
     },
     frames: { max: 6, scale: 3, offset: { x: 18, y: 36 } },
     stats: {
-        health: 100,
+        health: 1,
         attackDamage: 15
     },
     sprites: {
@@ -132,20 +129,15 @@ const flying_bat = {
     moving: true,
     speed: 3,
     image: flyingBatDownPngIdle,
-    position: {
-        //TODO new location for every enemy
-        x: 200,
-        y: 400
-    },
     frames: {
-        max: 5, scale: 2, 
+        max: 5, scale: 2,
         offset: {
             // offset will crop the image so to remove the padding ie empty white space
             x: 0, y: 0
         }
     },
     stats: {
-        health: 100,
+        health: 50,
         attackDamage: 12
     },
     sprites: {
@@ -184,7 +176,7 @@ const flying_bat = {
         }
     }
 }
+
 export {
-    base_img, foregroundImg, playerImgDown, playerImgUp, playerImgRight,
-    playerImgLeft, goblin, flying_bat
+    base_img, foregroundImg, goblin, flying_bat, bulletObj
 }

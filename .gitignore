@@ -3,3 +3,4 @@ node_modules
 src/assets
 src/assets/goblin
 .DS_Store
+dist

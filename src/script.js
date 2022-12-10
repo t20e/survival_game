@@ -1,17 +1,18 @@
 import './style.css'
 import { collisions } from './assets/map/collision_array.js'
-import zoomedOutMapPng from './assets/map/base_map_zoomed_out.png'
-import { Boundary, Sprite, Enemy } from './classes.js'
+import { Boundary, Sprite, Enemy, Bullet } from './classes.js'
 import {
-    playerImgDown, playerImgUp, playerImgRight,
-    playerImgLeft, goblin, flying_bat
+    goblin, flying_bat
 } from './createImgs.js'
-import * as Utils from './utils'
+import * as Utils from './utils/utils'
 
 import startAudio from './assets/audio/game_start.mp3'
 import gameOverAudio from './assets/audio/death_sound.mp3'
 import base_img from './assets/map/base_map.png'
 import foregroundImg from './assets/map/foreground_map.png'
+
+
+
 
 const menu = document.getElementById('menu')
 const survivalScreen = document.querySelector('.roundStart')
@@ -22,18 +23,28 @@ canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 const context = canvas.getContext('2d')
 context.imageSmoothingEnabled = false;
-let reqAnim;
+const zoomedOutMap = document.getElementById('zoomedOutMap')
 
-let allowMoving;
+let gameStarted = false
+let isGameOver = false
+
+const gameStats = {
+    roundCount: 1,
+    enemiesKilled: 0,
+    amountOfBulletsFired: 0,
+}
+
+// the animate func to be stopped etc
+let reqAnim;
+// 
+let allowMoving; //allows things to be moved
 
 const enemies = []
 // moveables will move other objects when player moves to give the illusion that they are all moving
 const moveables = []
 
-let gameStarted = false
-const zoomedOutMap = document.getElementById('zoomedOutMap')
-zoomedOutMap.src = zoomedOutMapPng
-let roundCount = 1
+
+const arrOfBullets = []//array of all the bullets player has shot
 
 const collisions_map = []
 let colliedDetected = false
@@ -41,14 +52,10 @@ let colliedDetected = false
 const boundaries = []
 const collideWarningElem = document.getElementById('colliedAlert');
 
-document.querySelector('.playBtn').addEventListener('click', () => {
-    new Audio(startAudio).play();
-    transitionToPLay();
-})
 
 const background = new Sprite({
     type: 'background',
-    position: Utils.spawnPlayerAnyWhere(),
+    position: Utils.spawnEntitiesPos(),
     image: base_img
 })
 const offset = {
@@ -65,7 +72,13 @@ const foreground = new Sprite({
     },
     image: foregroundImg
 })
-const testEnemy = new Enemy({ ...flying_bat })
+const testEnemy = new Enemy({
+    ...flying_bat,
+    position: {
+        x: Math.floor(Math.random() * 800) + 100,
+        y: Math.floor(Math.random() * 800) + 100
+    }
+})
 
 const player = new Sprite(
     //     {
@@ -106,15 +119,22 @@ const player = new Sprite(
         frames: { ...goblin.frames, scale: 12 }
     }
 )
-enemies.push(testEnemy)
-const testBoundary = new Boundary({
-    position: {
-        x: 400,
-        y: 300
-    }
-})
-moveables.push(background, foreground, ...enemies, testBoundary)
 
+enemies.push(testEnemy)
+// const testBoundary = new Boundary({
+//     position: {
+//         x: 400,
+//         y: 300
+//     }
+// })
+
+
+
+moveables.push(background, foreground, ...enemies)
+document.querySelector('.playBtn').addEventListener('click', () => {
+    new Audio(startAudio).play();
+    transitionToPLay();
+})
 const init = () => {
     // fill background black
     // context.fillStyle = 'black'
@@ -192,10 +212,6 @@ const transitionToPLay = () => {
         x: canvas.width / 2 - 192 / 4 / 2,
         y: canvas.height / 2 - 68 / 2
     }
-    // player.position = {
-    //     x: canvas.width / 2 - 192 / 4 / 2,
-    //     y: canvas.height / 2 - 68 / 2
-    // }
     changeRoundText()
     play()
 }
@@ -205,7 +221,7 @@ const changeRoundText = () => {
     setTimeout(() => {
         p.classList.remove('zoom-in')
         p.style.display = 'none'
-        p.innerHTML = `Round: ${roundCount += 1}`
+        p.innerHTML = `Round: ${gameStats.roundCount += 1}`
     }, 3000)
 }
 
@@ -246,23 +262,32 @@ const play = () => {
                     break;
             }
         })
+        window.addEventListener('click', (e) => {
+            // player.changeSprite('special', 'attack', 'attackFrames')
+            Utils.createBullet()
+        })
     }, 1000)
     Utils.startGame()
     //TODO generate enemies and other things and rount
     animate()
 }
-
-let isGameOver = false
+const gameOverCont = document.getElementById('gameOverCont')
 const gameOver = () => {
-    // TODO
+    // TODO finish game over
     isGameOver = true;
     new Audio(gameOverAudio).play();
-    // window.cancelAnimationFrame(reqAnim);
-    // restart the generate a new position for player
-    // then display how did they did that game and have a button to restart the game
-    // cancelAnimationFrame
-    // player has died
+    gameOverCont.style.display = 'flex'
+    document.querySelector('.numEnemiesKilled').innerHTML = '# of enemies killed : ' + gameStats.enemiesKilled
+    document.querySelector('.amountOfBulletsFired').innerHTML = 'amount of bullets fired : ' + gameStats.amountOfBulletsFired
+    document.querySelector('.roundsSurvived').innerHTML = 'rounds survived : ' + gameStats.roundCount
+    window.cancelAnimationFrame(reqAnim);
+    // clear enemies and and bullets
     // bring back background image
+    enemies.length = 0
+    arrOfBullets.length = 0
+    moveables.length = 0
+
+    // restart the generate a new position for player
     // bring back play button
     // restart everything 
     // make round count = 1
@@ -274,7 +299,7 @@ const changeMovement = (boolean) => {
 const animate = () => {
     reqAnim = window.requestAnimationFrame(animate)
     context.clearRect(0, 0, canvas.width, canvas.height)
-    if (player.stats.health <= 0 && !isGameOver ) {
+    if (player.stats.health <= 0 && !isGameOver) {
         gameOver()
         // return;
     }
@@ -289,19 +314,27 @@ const animate = () => {
     })
     player.draw()
     foreground.draw()
-    enemies.forEach(enemy => {
-        //     Utils.checkCollidingBoundary({ pixelCount: { 'y': { amount: 3 } }, obj: enemy })
-        enemy.moveToPlayer({ 'canvas': canvas, 'player': player })
-        //     // check colliding with other enemy
-    })
+    if (enemies.length > 0) {
+        enemies.forEach(enemy => {
+            enemy.moveToPlayer({ 'canvas': canvas, 'player': player })
+        })
+    } else {
+        // go to next round
+    }
     allowMoving = true
     if (player.currAction === undefined) {
         Utils.checkKeyPress(player)
+    }
+    if (arrOfBullets.length > 0) {
+        // console.log(arrOfBullets)
+        // draw each bullet
+        Utils.moveBullets()
     }
 }
 
 init()
 
 export {
-    context, canvas, offset, moveables, player, changeMovement, colliding, setColliedDetected, allowMoving, boundaries
+    context, canvas, offset, gameStats, moveables, player, changeMovement,
+    colliding, setColliedDetected, allowMoving, boundaries, arrOfBullets, enemies
 }

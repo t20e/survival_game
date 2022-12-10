@@ -19,6 +19,7 @@ body {
 }
 
 #zoomedOutMap {
+    user-select: none;
     pointer-events: none;
     height: 100vh;
     width: auto;
@@ -55,6 +56,7 @@ body {
 }
 
 #colliedAlert {
+    user-select: none;
     height: 20vh;
     width: 100vw;
     position: absolute;
@@ -172,4 +174,34 @@ body {
 .movementGestureCont div {
     height: 60%;
     width: 300px;
+}
+
+
+#gameOverCont {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rebeccapurple;
+    z-index: 35;
+    height: 600px;
+    width: 900px;
+    padding: 0 10rem;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 5rem;
+}
+#gameOverCont h1{
+    color: red;
+    margin-bottom: 3rem;
+}
+
+ol{
+    color: white;
+    list-style: none;
+}
+li{
+    margin-top: 1rem;
+    white-space: nowrap;
 }

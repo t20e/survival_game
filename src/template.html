@@ -11,7 +11,7 @@
 
 <body>
     <canvas></canvas>
-    <img id="zoomedOutMap" alt="background map">
+    <img id="zoomedOutMap" src="./assets//map/base_map_zoomed_out.png" alt="background map">
     <div id="healthBar">
         <img src="./assets/other/heart.png" alt="heart img">
         <div>
@@ -36,6 +36,14 @@
     <div class="movementGestureCont">
         <div class="keysMovement"></div>
         <div class="mouseMovement"></div>
+    </div>
+    <div id="gameOverCont">
+        <h1>You died!</h1>
+        <ol>
+            <li class="roundsSurvived"></li>
+            <li class="numEnemiesKilled"> </li>
+            <li class="amountOfBulletsFired"></li>
+        </ol>
     </div>
 </body>
 

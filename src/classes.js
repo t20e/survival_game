@@ -1,5 +1,7 @@
 import { context, canvas, player } from './script.js'
-import { editHealthBar } from './utils'
+import { editHealthBar } from './utils/utils.js'
+import { bulletObj } from './createImgs'
+
 class Sprite {
     constructor({
         position, image, moving = false, speed, stats,
@@ -21,7 +23,7 @@ class Sprite {
             this.width = (this.image.width / this.frames.max)
             this.height = this.image.height
         }
-        if (this.type !== 'background') {
+        if (this.type !== 'background' || this.type !== 'bullet') {
             for (const imgType in this.sprites) {
                 if (Object.keys(this.sprites[imgType]).length > 1) {
                     for (const mode in this.sprites[imgType]) {
@@ -52,8 +54,8 @@ class Sprite {
             (this.image.width / this.frames.max) * this.frames.scale, //adjust scale the cutout image x
             this.image.height * this.frames.scale, //adjust scale the cutout image y
         )
-        // create a strok at the center of the sprite 
-        // context.strokeRect(this.position.x + (this.image.width / this.frames.max), this.position.y + (this.image.height), 10, 10)
+        // create a stroke at the center of the sprite 
+        // context.strokeRect(this.position.x + (this.image.width / this.frames.max), this.position.y + (this.image.height), 100, 100)
         if (!this.moving) return
         this.animate()
     }
@@ -113,10 +115,17 @@ class Sprite {
                 break;
             case 'special':
                 // handle attacks and hurt modes 
-                this.currAction = 'hurt'
-                this.image = this.sprites[this.direction][mode]
-                this.frames.max = this.sprites[whichFrames]
-                changeWidthHeight = true
+                if (mode === 'hurt') {
+                    this.currAction = 'hurt'
+                    this.image = this.sprites[this.direction][mode]
+                    this.frames.max = this.sprites[whichFrames]
+                    changeWidthHeight = true
+                } else if (mode === 'death') {
+
+                }
+                else {
+                    // player attacks
+                }
                 setTimeout(() => {
                     this.currAction = undefined
                 }, 400)
@@ -131,7 +140,6 @@ class Sprite {
     }
 }
 
-
 class Enemy extends Sprite {
     constructor(...args) {
         super(...args)
@@ -141,6 +149,9 @@ class Enemy extends Sprite {
     }
     moveToPlayer({ canvas, player }) {
         super.draw()
+        if (this.currAction !== undefined) {
+            return
+        }
         if (player.stats.health <= 0) {
             this.image = this.sprites[this.directionToPlayer]['idle']
             this.frames.max = this.sprites.idleFrames
@@ -235,5 +246,78 @@ class Boundary {
     }
 }
 
-export { Boundary, Sprite, Enemy }
+class Bullet {
+    constructor() {
+        for (const img in bulletObj) {
+            this[img] = new Image()
+            this[img].src = bulletObj[img]
+        }
+        this.travelDistance = 0
+        this.positionBullet(player.direction)
+    }
+    draw() {
+        this.positionBullet(this.direction)
+        context.drawImage(
+            this.image,
+            this.position.x,
+            this.position.y,
+        )
+    }
+    positionBullet(direction) {
+        switch (direction) {
+            case 'down':
+                if (this.image) {
+                    this.travelDistance += 10
+                    return this.position.y += 10
+                }
+                this.image = this.down
+                this.direction = 'down'
+                this.position = {
+                    x: player.position.x + (player.image.width / player.frames.max) - this[direction].width / 4,
+                    y: player.position.y + (player.image.height) + player.image.height
+                }
+                break;
+            case 'up':
+                if (this.image) {
+                    this.travelDistance += 10
+                    return this.position.y -= 10
+                }
+                this.direction = 'up'
+                this.image = this.up
+                this.position = {
+                    x: player.position.x + (player.image.width / player.frames.max) - this[direction].width / 4,
+                    y: player.position.y + (player.image.height) - player.image.height * 2
+                }
+                break;
+            case 'right':
+                if (this.image) {
+                    this.travelDistance += 10
+                    return this.position.x += 10
+                }
+                this.direction = 'right'
+                this.image = this.right
+                this.position = {
+                    x: player.position.x + (player.image.width / player.frames.max) - this[direction].width / 4 + player.image.width / player.frames.max,
+                    y: player.position.y + (player.image.height)
+                }
+                break;
+            case 'left':
+                if (this.image) {
+                    this.travelDistance += 10
+                    return this.position.x -= 10
+                }
+                this.direction = 'left'
+                this.image = this.left
+                this.position = {
+                    x: player.position.x + (player.image.width / player.frames.max) - this[direction].width / 4 - player.image.width / player.frames.max,
+                    y: player.position.y + (player.image.height)
+                }
+                break;
+        }
+        this.width = this.image.width
+        this.height = this.image.height
+    }
+}
+
+export { Boundary, Sprite, Enemy, Bullet }
 
