@@ -6,18 +6,17 @@ import {
 } from './createImgs.js'
 import * as Utils from './utils/utils'
 
-import startAudio from './assets/audio/game_start.mp3'
-import gameOverAudio from './assets/audio/death_sound.mp3'
 import base_img from './assets/map/base_map.png'
 import foregroundImg from './assets/map/foreground_map.png'
+import * as gameInfo from './utils/gameInfo.js'
 
 
 
 
 const menu = document.getElementById('menu')
 const survivalScreen = document.querySelector('.roundStart')
-const p = survivalScreen.children[0]
-p.style.display = 'none'
+const pRound = survivalScreen.children[0]
+pRound.style.display = 'none'
 const canvas = document.querySelector('canvas')
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
@@ -25,24 +24,13 @@ const context = canvas.getContext('2d')
 context.imageSmoothingEnabled = false;
 const zoomedOutMap = document.getElementById('zoomedOutMap')
 
-let gameStarted = false
-let isGameOver = false
-
-const gameStats = {
-    roundCount: 1,
-    enemiesKilled: 0,
-    amountOfBulletsFired: 0,
-}
-
 // the animate func to be stopped etc
-let reqAnim;
-// 
+let reqAnimation;
 let allowMoving; //allows things to be moved
 
 const enemies = []
 // moveables will move other objects when player moves to give the illusion that they are all moving
 const moveables = []
-
 
 const arrOfBullets = []//array of all the bullets player has shot
 
@@ -52,57 +40,8 @@ let colliedDetected = false
 const boundaries = []
 const collideWarningElem = document.getElementById('colliedAlert');
 
-
-const background = new Sprite({
-    type: 'background',
-    position: Utils.spawnEntitiesPos(),
-    image: base_img
-})
-const offset = {
-    // offset the map
-    x: background.position.x,
-    y: background.position.y,
-}
-
-const foreground = new Sprite({
-    type: 'background',
-    position: {
-        x: offset.x,
-        y: offset.y,
-    },
-    image: foregroundImg
-})
-const testEnemy = new Enemy({
-    ...flying_bat,
-    position: {
-        x: Math.floor(Math.random() * 800) + 100,
-        y: Math.floor(Math.random() * 800) + 100
-    }
-})
-
+let background, offset, foreground, testEnemy
 const player = new Sprite(
-    //     {
-    //     // type: 'player',
-    //     // image: playerImgDown,
-    //     // frames: { max: 4, scale: 6, offset: { y: 0, x: 0 } },
-    //     // position: {
-    //     //     x: canvas.width / 2 - 1200 / 4 / 2,
-    //     //     y: canvas.height / 2 - 550 / 2
-    //     // },
-    //     // speed: 3,
-    //     // sprites: {
-    //     //     up: playerImgUp,
-    //     //     left: playerImgLeft,
-    //     //     right: playerImgRight,
-    //     //     down: playerImgDown,
-    //     // },
-    //     // stats: {
-    //     //     health: 100,
-    //     //     attackDamage: 35
-    //     // },
-    //     // moving: true
-    // }
-    // goblin
     {
         ...goblin,
         position: {
@@ -120,26 +59,48 @@ const player = new Sprite(
     }
 )
 
-enemies.push(testEnemy)
 // const testBoundary = new Boundary({
 //     position: {
 //         x: 400,
 //         y: 300
 //     }
 // })
-
-
-
-moveables.push(background, foreground, ...enemies)
-document.querySelector('.playBtn').addEventListener('click', () => {
-    new Audio(startAudio).play();
-    transitionToPLay();
+background = new Sprite({
+    type: 'background',
+    position: Utils.spawnEntitiesPos(),
+    image: base_img
 })
+offset = {
+    // offset the map
+    x: background.position.x,
+    y: background.position.y,
+}
+
+foreground = new Sprite({
+    type: 'background',
+    position: {
+        x: offset.x,
+        y: offset.y,
+    },
+    image: foregroundImg
+})
+moveables.push(background, foreground)
+
+
 const init = () => {
+    gameInfo.playBtn.addEventListener('click', gameInfo.playGameStartAudio)
+    // testEnemy = new Enemy({
+    //     ...flying_bat,
+    //     position: {
+    //         x: Math.floor(Math.random() * 800) + 100,
+    //         y: Math.floor(Math.random() * 800) + 100
+    //     }
+    // })
+
+    // enemies.push(testEnemy)
     // fill background black
     // context.fillStyle = 'black'
     // context.fillRect(0, 0, canvas.width, canvas.height)
-    addBoundaries()
     context.translate(canvas.width / 2, canvas.height / 2);
     // give images opacity has to be done before adding imag to context
     // context.globalAlpha = .6
@@ -171,6 +132,7 @@ const addBoundaries = () => {
     // console.log(boundaries)
     moveables.push(...boundaries)
 }
+addBoundaries()
 
 const setColliedDetected = (boolean) => {
     colliedDetected = boolean
@@ -203,27 +165,20 @@ const fadeOutElem = () => {
 }
 // 
 const transitionToPLay = () => {
+    console.log('transitionToPLay count')
     zoomedOutMap.style.display = 'none'
     menu.style.display = 'none'
-    window.cancelAnimationFrame(reqAnim)
-    gameStarted = true
+    window.cancelAnimationFrame(reqAnimation)
+    gameInfo.setGameStarted(true)
+    player.stats.health = 100
     player.frames.scale = 3
     player.position = {
         x: canvas.width / 2 - 192 / 4 / 2,
         y: canvas.height / 2 - 68 / 2
     }
-    changeRoundText()
     play()
 }
-const changeRoundText = () => {
-    p.style.display = 'flex'
-    p.classList.add('zoom-in')
-    setTimeout(() => {
-        p.classList.remove('zoom-in')
-        p.style.display = 'none'
-        p.innerHTML = `Round: ${gameStats.roundCount += 1}`
-    }, 3000)
-}
+
 
 const play = () => {
     setTimeout(() => {
@@ -233,15 +188,19 @@ const play = () => {
         window.addEventListener("keydown", (e) => {
             switch (e.key) {
                 case 'w':
+                case 'W':
                     Utils.keys.w.pressed = true;
                     break;
                 case 'a':
+                case 'A':
                     Utils.keys.a.pressed = true;
                     break;
                 case 's':
+                case 'S':
                     Utils.keys.s.pressed = true;
                     break;
                 case 'd':
+                case 'D':
                     Utils.keys.d.pressed = true;
                     break;
             }
@@ -249,63 +208,96 @@ const play = () => {
         window.addEventListener("keyup", (e) => {
             switch (e.key) {
                 case 'w':
+                case 'W':
                     Utils.keys.w.pressed = false;
                     break;
                 case 'a':
+                case 'A':
                     Utils.keys.a.pressed = false;
                     break;
                 case 's':
+                case 'S':
                     Utils.keys.s.pressed = false;
                     break;
                 case 'd':
+                case 'D':
                     Utils.keys.d.pressed = false;
                     break;
             }
         })
-        window.addEventListener('click', (e) => {
-            // player.changeSprite('special', 'attack', 'attackFrames')
-            Utils.createBullet()
-        })
+        window.addEventListener('click', Utils.createBullet)
     }, 1000)
     Utils.startGame()
-    //TODO generate enemies and other things and rount
     animate()
 }
-const gameOverCont = document.getElementById('gameOverCont')
-const gameOver = () => {
-    // TODO finish game over
-    isGameOver = true;
-    new Audio(gameOverAudio).play();
-    gameOverCont.style.display = 'flex'
-    document.querySelector('.numEnemiesKilled').innerHTML = '# of enemies killed : ' + gameStats.enemiesKilled
-    document.querySelector('.amountOfBulletsFired').innerHTML = 'amount of bullets fired : ' + gameStats.amountOfBulletsFired
-    document.querySelector('.roundsSurvived').innerHTML = 'rounds survived : ' + gameStats.roundCount
-    window.cancelAnimationFrame(reqAnim);
-    // clear enemies and and bullets
-    // bring back background image
-    enemies.length = 0
-    arrOfBullets.length = 0
-    moveables.length = 0
 
-    // restart the generate a new position for player
-    // bring back play button
-    // restart everything 
-    // make round count = 1
-}
 const changeMovement = (boolean) => {
     allowMoving = boolean
 }
+// const proxyEnemies = new Proxy(enemies,{
 
-const animate = () => {
-    reqAnim = window.requestAnimationFrame(animate)
-    context.clearRect(0, 0, canvas.width, canvas.height)
-    if (player.stats.health <= 0 && !isGameOver) {
-        gameOver()
-        // return;
+// })
+let allowNextRound = true
+const nextRound = () => {
+    // if (enemies.length === 0 ) {
+    // go to next round
+    Utils.changeRoundText()
+    // console.log('before round',moveables)
+    if (gameInfo.gameStats.roundCount !== 0) {
+        moveables.forEach((item, index) => {
+            if (item instanceof Enemy) {
+                // console.log('index', index)
+                moveables.splice(index, 1)
+                // console.log('removed enemy from moveables', item)
+            }
+        })
+        // console.log('after round', moveables)
     }
-    if (!gameStarted) {
+    enemies.length = 0
+    gameInfo.gameStats.roundCount += 1
+    const newEnemies = Utils.generateEnemies()
+    // console.log(newEnemies)
+    moveables.push(...newEnemies)
+    enemies.push(...newEnemies)
+    // }
+}
+let currRound = gameInfo.gameStats.roundCount
+const animate = () => {
+
+    if (gameInfo.isGameOver) return
+    reqAnimation = window.requestAnimationFrame(animate)
+    context.clearRect(0, 0, canvas.width, canvas.height)
+    if (!gameInfo.gameStarted) {
         player.draw()
         return
+    }
+    if (player.stats.health <= 0) {
+        player.changeSprite('special', 'death', 'deathFrames')
+        enemies.length = 0
+        console.log(enemies)
+        arrOfBullets.length = 0
+        // console.log('before death',moveables)
+        moveables.forEach((item, index) => {
+            if (item instanceof Enemy) {
+                moveables.splice(index, 1)
+            }
+        })
+        // console.log('after death',moveables)
+        window.cancelAnimationFrame(reqAnimation);
+        setTimeout(() => {
+            allowNextRound = true
+            gameInfo.gameOver()
+            currRound = 0
+        }, 1000)
+    }
+    if (currRound === gameInfo.gameStats.roundCount && allowNextRound && enemies.length === 0) {
+        nextRound()
+        console.log('curr round', gameInfo.gameStats.roundCount, '\nfrom script:', currRound)
+        allowNextRound = false
+    } else if (currRound !== gameInfo.gameStats.roundCount && !allowNextRound
+        && enemies.length === 0) {
+        currRound = gameInfo.gameStats.roundCount
+        allowNextRound = true
     }
     player.moving = true
     background.draw()
@@ -318,16 +310,12 @@ const animate = () => {
         enemies.forEach(enemy => {
             enemy.moveToPlayer({ 'canvas': canvas, 'player': player })
         })
-    } else {
-        // go to next round
     }
     allowMoving = true
     if (player.currAction === undefined) {
         Utils.checkKeyPress(player)
     }
     if (arrOfBullets.length > 0) {
-        // console.log(arrOfBullets)
-        // draw each bullet
         Utils.moveBullets()
     }
 }
@@ -335,6 +323,7 @@ const animate = () => {
 init()
 
 export {
-    context, canvas, offset, gameStats, moveables, player, changeMovement,
-    colliding, setColliedDetected, allowMoving, boundaries, arrOfBullets, enemies
+    context, init, canvas, offset, moveables, player, changeMovement,
+    colliding, pRound, setColliedDetected, allowMoving, boundaries,
+    arrOfBullets, menu, transitionToPLay, enemies, reqAnimation
 }

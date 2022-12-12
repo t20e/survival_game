@@ -38,6 +38,7 @@ class Sprite {
         }
     }
     draw() {
+        context.save()
         // if(this.type === 'player')
         // console.log(this.image)
         context.drawImage(
@@ -54,6 +55,7 @@ class Sprite {
             (this.image.width / this.frames.max) * this.frames.scale, //adjust scale the cutout image x
             this.image.height * this.frames.scale, //adjust scale the cutout image y
         )
+        context.restore()
         // create a stroke at the center of the sprite 
         // context.strokeRect(this.position.x + (this.image.width / this.frames.max), this.position.y + (this.image.height), 100, 100)
         if (!this.moving) return
@@ -121,7 +123,11 @@ class Sprite {
                     this.frames.max = this.sprites[whichFrames]
                     changeWidthHeight = true
                 } else if (mode === 'death') {
-
+                    this.currAction = 'death'
+                    this.image = this.sprites[this.direction][mode]
+                    this.frames.max = this.sprites[whichFrames]
+                    changeWidthHeight = true
+                    // player = null
                 }
                 else {
                     // player attacks
@@ -144,8 +150,7 @@ class Enemy extends Sprite {
     constructor(...args) {
         super(...args)
         this.directionToPlayer = 'left'
-    }
-    test() {
+        this.id = Math.floor(Math.random() * 1E16)
     }
     moveToPlayer({ canvas, player }) {
         super.draw()
@@ -226,6 +231,10 @@ class Enemy extends Sprite {
                 this.attackingMode = false
             }
         }
+    }
+    takeDamage(damage) {
+        this.stats.health -= damage
+        this.changeSprite('special', 'hurt', 'hurtFrames')
     }
 }
 

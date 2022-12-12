@@ -85,7 +85,7 @@ const goblin = {
     },
     frames: { max: 6, scale: 3, offset: { x: 18, y: 36 } },
     stats: {
-        health: 1,
+        health: 100,
         attackDamage: 15
     },
     sprites: {
@@ -124,7 +124,9 @@ const goblin = {
         }
     }
 }
+
 const flying_bat = {
+    id: undefined,
     type: 'enemy',
     moving: true,
     speed: 3,
