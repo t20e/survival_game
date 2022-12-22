@@ -5,8 +5,9 @@ import { bulletObj } from './createImgs'
 class Sprite {
     constructor({
         position, image, moving = false, speed, stats,
-        frames = { x: 1, y: 0, max: 1, scale: 1, offset: { x: 0, y: 0 } }, sprites, type = 'undefined',
+        frames = { x: 1, y: 0, max: 1, scale: 1, offset: { x: 0, y: 0 } }, sprites, type,
     }) {
+        this.id = Math.floor(Math.random() * 1E16)
         this.stats = stats
         this.type = type
         this.currAction = undefined
@@ -19,6 +20,7 @@ class Sprite {
         this.frames = { ...frames, val: 0, elapsed: 0 }
         this.image = new Image()
         this.image.src = image
+        this.isDefault = false
         this.image.onload = () => {
             this.width = (this.image.width / this.frames.max)
             this.height = this.image.height
@@ -35,6 +37,9 @@ class Sprite {
                     }
                 }
             }
+        }
+        if (this.type === 'background') {
+            this.isDefault = true
         }
     }
     draw() {
@@ -150,7 +155,10 @@ class Enemy extends Sprite {
     constructor(...args) {
         super(...args)
         this.directionToPlayer = 'left'
-        this.id = Math.floor(Math.random() * 1E16)
+        this.stats = {
+            health: 50,
+            attackDamage: 12
+        }
     }
     moveToPlayer({ canvas, player }) {
         super.draw()
@@ -243,10 +251,12 @@ class Boundary {
     static width = 64
     static height = 64
     constructor({ position }) {
-        this.position = position,
-            this.width = 64
+        this.position = position
+        this.width = 64
         this.height = 64
+        this.id = Math.floor(Math.random() * 1E16)
         this.flicker = false
+        this.isDefault = true
     }
     draw() {
         // context.fillStyle = 'rgba(255,0,0,0.4)'
@@ -262,7 +272,9 @@ class Bullet {
             this[img].src = bulletObj[img]
         }
         this.travelDistance = 0
+        this.id = Math.floor(Math.random() * 1E16)
         this.positionBullet(player.direction)
+        this.isDefault = false
     }
     draw() {
         this.positionBullet(this.direction)

@@ -1,7 +1,7 @@
 import { Bullet, Enemy } from '../classes.js'
 import { flying_bat } from '../createImgs.js'
 import {
-    moveables, allowMoving, arrOfBullets, enemies, pRound
+    moveables, allowMoving, arrOfBullets, enemies, pRound, editEnemies,editMoveables
 } from '../script.js'
 import * as gameInfo from './gameInfo.js'
 import Lottie from 'lottie-web'
@@ -72,12 +72,13 @@ const editHealthBar = (percentage) => {
     healthBar.style.width = percentage
 }
 const changeRoundText = () => {
+    gameInfo.changeGameStats('roundCount', gameInfo.gameStats.roundCount + 1)
     pRound.style.display = 'flex'
     pRound.classList.add('zoom-in')
     setTimeout(() => {
         pRound.classList.remove('zoom-in')
         pRound.style.display = 'none'
-        pRound.innerHTML = `Round: ${gameInfo.gameStats.roundCount}`
+        pRound.innerHTML = `Round: ${gameInfo.gameStats.roundCount + 1}`
     }, 3000)
 }
 const startGame = () => {
@@ -115,7 +116,7 @@ const createBullet = () => {
     const bullet = new Bullet()
     arrOfBullets.push(bullet)
     moveables.push(bullet)
-    gameInfo.gameStats.amountOfBulletsFired += 1
+    gameInfo.changeGameStats('amountOfBulletsFired', gameInfo.gameStats.amountOfBulletsFired + 1)
 }
 const moveBullets = () => {
     for (let i in arrOfBullets) {
@@ -128,34 +129,33 @@ const moveBullets = () => {
     }
 }
 const deleteBullet = (bullet) => {
+    editMoveables(bullet)
     let index = arrOfBullets.indexOf(bullet) //remove from bullet arr
-    bullet = null
     arrOfBullets.splice(index, 1)
-    index = moveables.indexOf(bullet) //remove from moveables arr
-    moveables.splice(index, 1)
+    bullet = null
 }
 const checkBulletCollied = (bullet) => {
     enemies.forEach((enemy, index) => {
         if (collisionDection.checkCollidingObjs({
             objOne: bullet, collidingObj: enemy
         })) {
+            enemy.takeDamage(25)
+            deleteBullet(bullet)
             // console.log('enemy', enemy)
             if (enemy.stats.health <= 0) {
                 //check to see if enemy is dead and do death sprite //return remove enemy from array list 
                 // console.log('killed enemy')
-                enemy.changeSprite('special', 'death', 'deathFrames')
-                setTimeout(() => {
-                    // console.log('before enemy', enemies)
-                    console.log(index)
-                    enemies.splice(index, 1)
-                    // console.log('killed enemy', enemies)
-                }, 200)
-                gameInfo.gameStats.enemiesKilled += 1
+                // enemy.changeSprite('special', 'death', 'deathFrames')
+                // setTimeout(() => {
+                // console.log('before enemy', enemies)
+                editMoveables(enemy)
+                editEnemies(index)
+                // console.log('killed enemy', enemies)
+                // }, 200)
+                gameInfo.changeGameStats('enemiesKilled', gameInfo.gameStats.enemiesKilled + 1)
                 return
             }
-            deleteBullet(bullet)
             // console.log('bullet hit enemy')
-            enemy.takeDamage(25)
         }
     })
 }
@@ -178,7 +178,7 @@ const spawnEntitiesPos = () => {
 const generateEnemies = () => {
     let count = 0
     let enemiesArr = []
-    while (count < (4 * (gameInfo.gameStats.roundCount === 0 ? 1 : gameInfo.gameStats.roundCount))) {
+    while (count < (4 * gameInfo.gameStats.roundCount)) {
         const enemy = new Enemy({
             ...flying_bat,
             position: {

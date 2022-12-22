@@ -29,9 +29,25 @@ let reqAnimation;
 let allowMoving; //allows things to be moved
 
 const enemies = []
+const editEnemies = (index) => {
+    enemies.splice(index, 1)
+}
 // moveables will move other objects when player moves to give the illusion that they are all moving
 const moveables = []
+const editMoveables = (removeObj) => {
+    moveables.forEach((item, index) => {
+        if (item.id === removeObj.id) {
+            moveables.splice(index, 1)
+        }
+    })
+}
 
+
+const changeMovement = (boolean) => {
+    allowMoving = boolean
+}
+
+let allowNextRound = true
 const arrOfBullets = []//array of all the bullets player has shot
 
 const collisions_map = []
@@ -96,7 +112,6 @@ const init = () => {
     //         y: Math.floor(Math.random() * 800) + 100
     //     }
     // })
-
     // enemies.push(testEnemy)
     // fill background black
     // context.fillStyle = 'black'
@@ -165,11 +180,10 @@ const fadeOutElem = () => {
 }
 // 
 const transitionToPLay = () => {
-    console.log('transitionToPLay count')
     zoomedOutMap.style.display = 'none'
     menu.style.display = 'none'
     window.cancelAnimationFrame(reqAnimation)
-    gameInfo.setGameStarted(true)
+    gameInfo.changeGameStats('gameStarted', true)
     player.stats.health = 100
     player.frames.scale = 3
     player.position = {
@@ -231,54 +245,39 @@ const play = () => {
     animate()
 }
 
-const changeMovement = (boolean) => {
-    allowMoving = boolean
-}
-// const proxyEnemies = new Proxy(enemies,{
-
-// })
-let allowNextRound = true
 const nextRound = () => {
-    // if (enemies.length === 0 ) {
     // go to next round
     Utils.changeRoundText()
     // console.log('before round',moveables)
-    if (gameInfo.gameStats.roundCount !== 0) {
-        moveables.forEach((item, index) => {
-            if (item instanceof Enemy) {
-                // console.log('index', index)
-                moveables.splice(index, 1)
-                // console.log('removed enemy from moveables', item)
-            }
-        })
-        // console.log('after round', moveables)
-    }
+    moveables.forEach((item, index) => {
+        if (item instanceof Enemy) {
+            // console.log('index', index)
+            moveables.splice(index, 1)
+            // console.log('removed enemy from moveables', item)
+        }
+    })
+    // console.log('after round', moveables)
     enemies.length = 0
-    gameInfo.gameStats.roundCount += 1
     const newEnemies = Utils.generateEnemies()
-    // console.log(newEnemies)
     moveables.push(...newEnemies)
     enemies.push(...newEnemies)
-    // }
 }
-let currRound = gameInfo.gameStats.roundCount
 const animate = () => {
-
-    if (gameInfo.isGameOver) return
+    if (gameInfo.gameStats.isGameOver) return
     reqAnimation = window.requestAnimationFrame(animate)
     context.clearRect(0, 0, canvas.width, canvas.height)
-    if (!gameInfo.gameStarted) {
+    if (!gameInfo.gameStats.gameStarted) {
         player.draw()
         return
     }
     if (player.stats.health <= 0) {
         player.changeSprite('special', 'death', 'deathFrames')
         enemies.length = 0
-        console.log(enemies)
+        // console.log(enemies)
         arrOfBullets.length = 0
         // console.log('before death',moveables)
         moveables.forEach((item, index) => {
-            if (item instanceof Enemy) {
+            if (item.isDefault !== true) {
                 moveables.splice(index, 1)
             }
         })
@@ -287,16 +286,12 @@ const animate = () => {
         setTimeout(() => {
             allowNextRound = true
             gameInfo.gameOver()
-            currRound = 0
         }, 1000)
     }
-    if (currRound === gameInfo.gameStats.roundCount && allowNextRound && enemies.length === 0) {
+    if (allowNextRound && enemies.length === 0) {
         nextRound()
-        console.log('curr round', gameInfo.gameStats.roundCount, '\nfrom script:', currRound)
         allowNextRound = false
-    } else if (currRound !== gameInfo.gameStats.roundCount && !allowNextRound
-        && enemies.length === 0) {
-        currRound = gameInfo.gameStats.roundCount
+    } else if (!allowNextRound && enemies.length === 0) {
         allowNextRound = true
     }
     player.moving = true
@@ -306,11 +301,9 @@ const animate = () => {
     })
     player.draw()
     foreground.draw()
-    if (enemies.length > 0) {
-        enemies.forEach(enemy => {
-            enemy.moveToPlayer({ 'canvas': canvas, 'player': player })
-        })
-    }
+    enemies.forEach(enemy => {
+        enemy.moveToPlayer({ 'canvas': canvas, 'player': player })
+    })
     allowMoving = true
     if (player.currAction === undefined) {
         Utils.checkKeyPress(player)
@@ -325,5 +318,5 @@ init()
 export {
     context, init, canvas, offset, moveables, player, changeMovement,
     colliding, pRound, setColliedDetected, allowMoving, boundaries,
-    arrOfBullets, menu, transitionToPLay, enemies, reqAnimation
+    arrOfBullets, menu, transitionToPLay, enemies, reqAnimation, editEnemies, editMoveables
 }
