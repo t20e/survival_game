@@ -2,7 +2,7 @@ import './style.css'
 import { collisions } from './assets/map/collision_array.js'
 import { Boundary, Sprite, Enemy, Bullet } from './classes.js'
 import {
-    goblin, flying_bat
+    playerObj, flying_bat
 } from './createImgs.js'
 import * as Utils from './utils/utils'
 
@@ -10,13 +10,7 @@ import base_img from './assets/map/base_map.png'
 import foregroundImg from './assets/map/foreground_map.png'
 import * as gameInfo from './utils/gameInfo.js'
 
-
-
-
 const menu = document.getElementById('menu')
-const survivalScreen = document.querySelector('.roundStart')
-const pRound = survivalScreen.children[0]
-pRound.style.display = 'none'
 const canvas = document.querySelector('canvas')
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
@@ -42,6 +36,7 @@ const editMoveables = (removeObj) => {
     })
 }
 
+const extraAmmoAndHealth = []
 
 const changeMovement = (boolean) => {
     allowMoving = boolean
@@ -59,19 +54,15 @@ const collideWarningElem = document.getElementById('colliedAlert');
 let background, offset, foreground, testEnemy
 const player = new Sprite(
     {
-        ...goblin,
+        ...playerObj,
         position: {
-            // the 12 is to grow because we are scaling
-            x: canvas.width / 2 - (192 * 12) / 4 / 2,
-            y: canvas.height / 2 - (68 * 12) / 2
+            // the 7 is to grow because we are scaling
+            x: canvas.width / 2 - (288 * 5) / 6,
+            y: canvas.height / 2 - (44 * 7)
         },
-        // position: {
-        //     x: canvas.width / 2 - 192 / 4 / 2,
-        //     y: canvas.height / 2 - 68 / 2
-        // },
         speed: 2.5,
         type: 'player',
-        frames: { ...goblin.frames, scale: 12 }
+        frames: { ...playerObj.frames, scale: 12 }
     }
 )
 
@@ -180,6 +171,10 @@ const fadeOutElem = () => {
 }
 // 
 const transitionToPLay = () => {
+    const mainAudio = document.getElementById('mainAudio')
+    mainAudio.volume = .2
+    mainAudio.play()
+
     zoomedOutMap.style.display = 'none'
     menu.style.display = 'none'
     window.cancelAnimationFrame(reqAnimation)
@@ -192,7 +187,6 @@ const transitionToPLay = () => {
     }
     play()
 }
-
 
 const play = () => {
     setTimeout(() => {
@@ -246,19 +240,24 @@ const play = () => {
 }
 
 const nextRound = () => {
-    // go to next round
     Utils.changeRoundText()
-    // console.log('before round',moveables)
     moveables.forEach((item, index) => {
         if (item instanceof Enemy) {
-            // console.log('index', index)
             moveables.splice(index, 1)
-            // console.log('removed enemy from moveables', item)
         }
     })
-    // console.log('after round', moveables)
     enemies.length = 0
+    const newAmmo = Utils.generateExtraAmmo()
+    extraAmmoAndHealth.push(...newAmmo)
+    moveables.push(...newAmmo)
+
+    const addHealth = Utils.generateHealthPlus()
+    extraAmmoAndHealth.push(...addHealth)
+    moveables.push(...addHealth)
+
     const newEnemies = Utils.generateEnemies()
+    player.ammo += newEnemies.length * 2 + 5
+    Utils.editAmmoDiv()
     moveables.push(...newEnemies)
     enemies.push(...newEnemies)
 }
@@ -275,6 +274,10 @@ const animate = () => {
         enemies.length = 0
         // console.log(enemies)
         arrOfBullets.length = 0
+        extraAmmoAndHealth.length = 0
+        player.ammo = 0
+        Utils.editAmmoDiv()
+        zoomedOutMap.style.display = 'flex'
         // console.log('before death',moveables)
         moveables.forEach((item, index) => {
             if (item.isDefault !== true) {
@@ -284,6 +287,14 @@ const animate = () => {
         // console.log('after death',moveables)
         window.cancelAnimationFrame(reqAnimation);
         setTimeout(() => {
+            player.position = {
+                // the 12 is to grow because we are scaling
+                x: canvas.width / 2 - (192 * 12) / 4 / 2,
+                y: canvas.height / 2 - (68 * 12) / 2
+            }
+            player.speed = 2.5
+            player.frames.scale = 12
+            player.changeSprite('down', 'idle', 'idleFrames')
             allowNextRound = true
             gameInfo.gameOver()
         }, 1000)
@@ -298,6 +309,10 @@ const animate = () => {
     background.draw()
     boundaries.forEach(boundary => {
         boundary.draw()
+    })
+    extraAmmoAndHealth.forEach(item => {
+        item.draw()
+        item.animateAmmoOrHealth()
     })
     player.draw()
     foreground.draw()
@@ -317,6 +332,6 @@ init()
 
 export {
     context, init, canvas, offset, moveables, player, changeMovement,
-    colliding, pRound, setColliedDetected, allowMoving, boundaries,
+    colliding, setColliedDetected, allowMoving, boundaries, extraAmmoAndHealth,
     arrOfBullets, menu, transitionToPLay, enemies, reqAnimation, editEnemies, editMoveables
 }

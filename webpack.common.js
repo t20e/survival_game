@@ -44,7 +44,7 @@ module.exports = {
             },
             {
                 // the i add the end of the test is for case insensitive names
-                test: /\.(png|jpg|jpeg|gif|svg)$/,
+                test: /\.(png|jpg|jpeg|gif|svg|mp3)$/,
                 type: 'asset/resource',
             },
             {
@@ -58,22 +58,6 @@ module.exports = {
                         }
                     }
                 ]
-            },
-            {
-                test: /\.(pdf|mp3)$/,
-                use: [
-                    {
-                        loader: 'file-loader',
-                        options: {
-                            name: '[name].[ext]',
-                            outputPath: 'assets'
-                        }
-                    }
-                ]
-            },
-            {
-                test: /\.(glb|gltf)$/i,
-                type: 'asset/resource',
             },
             {
                 test: /\.(woff|woff2|eot|ttf|otf)$/i,

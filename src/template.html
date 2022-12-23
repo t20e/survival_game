@@ -10,8 +10,10 @@
 </head>
 
 <body>
+    <audio id="mainAudio" autoplay loop preload="auto" src="./assets/audio/mainSound.mp3">
+    </audio>
+    <img id="zoomedOutMap" src="./assets/map/base_map_zoomed_out.png" alt="background map">
     <canvas></canvas>
-    <img id="zoomedOutMap" src="./assets//map/base_map_zoomed_out.png" alt="background map">
     <div id="healthBar">
         <img src="./assets/other/heart.png" alt="heart img">
         <div>
@@ -44,6 +46,9 @@
             <li class="numEnemiesKilled"> </li>
             <li class="amountOfBulletsFired"></li>
         </ol>
+    </div>
+    <div id="ammoDiv">
+        <p>AMMO: 0</p>
     </div>
 </body>
 

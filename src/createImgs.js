@@ -2,31 +2,32 @@ import base_mapPng from './assets/map/base_map.png'
 import foregroundImport from './assets/map/foreground_map.png'
 // player imgs
 
-// goblin
+// player
 // down 
-import enemy_imgDownPngAttack from './assets/goblin/Down/GoblinDownAttack01.png'
-import enemy_imgDownPngDeath from './assets/goblin/Down/GoblinDownDeath.png'
-import enemy_imgDownPngHurt from './assets/goblin/Down/GoblinDownHurt.png'
-import enemy_imgDownPngIdle from './assets/goblin/Down/GoblinDownIdle.png'
-import enemy_imgDownPngRun from './assets/goblin/Down/GoblinDownRun.png'
-//left
-import enemy_imgLeftPngAttack from './assets/goblin/Left/GoblinLeftAttack01.png'
-import enemy_imgLeftPngDeath from './assets/goblin/Left/GoblinLeftDeath.png'
-import enemy_imgLeftPngHurt from './assets/goblin/Left/GoblinLeftHurt.png'
-import enemy_imgLeftPngIdle from './assets/goblin/Left/GoblinLeftIdle.png'
-import enemy_imgLeftPngRun from './assets/goblin/Left/GoblinLeftRun.png'
-// goblin right
-import enemy_imgRightPngAttack from './assets/goblin/Right/GoblinRightAttack01.png'
-import enemy_imgRightPngDeath from './assets/goblin/Right/GoblinRightDeath.png'
-import enemy_imgRightPngHurt from './assets/goblin/Right/GoblinRightHurt.png'
-import enemy_imgRightPngIdle from './assets/goblin/Right/GoblinRightIdle.png'
-import enemy_imgRightPngRun from './assets/goblin/Right/GoblinRightRun.png'
+import playerDownPngAttack from './assets/sprites/player/Down/downAttack.png'
+import playerDownPngDeath from './assets/sprites/player/Down/downDeath.png'
+import playerDownPngHurt from './assets/sprites/player/Down/downHurt.png'
+import playerDownPngIdle from './assets/sprites/player/Down/downIdle.png'
+import playerDownPngRun from './assets/sprites/player/Down/downRun.png'
+//  right
+import playerRightPngAttack from './assets/sprites/player/Right/rightAttack.png'
+import playerRightPngDeath from './assets/sprites/player/Right/rightDeath.png'
+import playerRightPngHurt from './assets/sprites/player/Right/rightHurt.png'
+import playerRightPngIdle from './assets/sprites/player/Right/rightIdle.png'
+import playerRightPngRun from './assets/sprites/player/Right/rightRun.png'
 //up
-import enemy_imgUpPngAttack from './assets/goblin/Up/GoblinUpAttack01.png'
-import enemy_imgUpPngDeath from './assets/goblin/Up/GoblinUpDeath.png'
-import enemy_imgUpPngHurt from './assets/goblin/Up/GoblinUpHurt.png'
-import enemy_imgUpPngIdle from './assets/goblin/Up/GoblinUpIdle.png'
-import enemy_imgUpPngRun from './assets/goblin/Up/GoblinUpRun.png'
+import playerUpPngAttack from './assets/sprites/player/Up/upAttack.png'
+import playerUpPngDeath from './assets/sprites/player/Up/upDeath.png'
+import playerUpPngHurt from './assets/sprites/player/Up/upHurt.png'
+import playerUpPngIdle from './assets/sprites/player/Up/upIdle.png'
+import playerUpPngRun from './assets/sprites/player/Up/upRun.png'
+//left
+import playerLeftPngAttack from './assets/sprites/player/Left/leftAttack.png'
+import playerLeftPngDeath from './assets/sprites/player/Left/leftDeath.png'
+import playerLeftPngHurt from './assets/sprites/player/Left/leftHurt.png'
+import playerLeftPngIdle from './assets/sprites/player/Left/leftIdle.png'
+import playerLeftPngRun from './assets/sprites/player/Left/leftRun.png'
+
 
 // flying_bat
 // down 
@@ -74,53 +75,54 @@ foregroundImg.src = foregroundImport
 
 
 
-const goblin = {
+const playerObj = {
     type: 'enemy',
     moving: true,
     speed: 2,
-    image: enemy_imgDownPngIdle,
+    image: playerDownPngIdle,
     position: {
         x: 200,
         y: 400
     },
-    frames: { max: 6, scale: 3, offset: { x: 18, y: 36 } },
+    // frames: { max: 6, scale: 3, offset: { x: 20, y: 5 } },
+    frames: { max: 6, scale: 3, offset: { x: 50, y: 30 } },
     stats: {
         health: 100,
         attackDamage: 15
     },
     sprites: {
-        attackFrames: 10,
-        deathFrames: 9,
-        hurtFrames: 4,
+        attackFrames: 6,
+        deathFrames: 14,
+        hurtFrames: 1,
         idleFrames: 6,
-        runFrames: 6,
+        runFrames: 8,
         up: {
-            attack: enemy_imgUpPngAttack,
-            death: enemy_imgUpPngDeath,
-            hurt: enemy_imgUpPngHurt,
-            idle: enemy_imgUpPngIdle,
-            run: enemy_imgUpPngRun
+            attack: playerUpPngAttack,
+            death: playerUpPngDeath,
+            hurt: playerUpPngHurt,
+            idle: playerUpPngIdle,
+            run: playerUpPngRun
         },
         down: {
-            attack: enemy_imgDownPngAttack,
-            death: enemy_imgDownPngDeath,
-            hurt: enemy_imgDownPngHurt,
-            idle: enemy_imgDownPngIdle,
-            run: enemy_imgDownPngRun
+            attack: playerDownPngAttack,
+            death: playerDownPngDeath,
+            hurt: playerDownPngHurt,
+            idle: playerDownPngIdle,
+            run: playerDownPngRun
         },
         right: {
-            attack: enemy_imgRightPngAttack,
-            death: enemy_imgRightPngDeath,
-            hurt: enemy_imgRightPngHurt,
-            idle: enemy_imgRightPngIdle,
-            run: enemy_imgRightPngRun
+            attack: playerRightPngAttack,
+            death: playerRightPngDeath,
+            hurt: playerRightPngHurt,
+            idle: playerRightPngIdle,
+            run: playerRightPngRun
         },
         left: {
-            death: enemy_imgLeftPngDeath,
-            attack: enemy_imgLeftPngAttack,
-            hurt: enemy_imgLeftPngHurt,
-            idle: enemy_imgLeftPngIdle,
-            run: enemy_imgLeftPngRun
+            death: playerLeftPngDeath,
+            attack: playerLeftPngAttack,
+            hurt: playerLeftPngHurt,
+            idle: playerLeftPngIdle,
+            run: playerLeftPngRun
         }
     }
 }
@@ -180,5 +182,5 @@ const flying_bat = {
 }
 
 export {
-    base_img, foregroundImg, goblin, flying_bat, bulletObj
+    base_img, foregroundImg, playerObj, flying_bat, bulletObj
 }

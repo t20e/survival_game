@@ -1,20 +1,22 @@
 import { context, canvas, player } from './script.js'
 import { editHealthBar } from './utils/utils.js'
 import { bulletObj } from './createImgs'
-
+import arrowAudio from './assets/audio/arrow.mp3'
 class Sprite {
     constructor({
-        position, image, moving = false, speed, stats,
-        frames = { x: 1, y: 0, max: 1, scale: 1, offset: { x: 0, y: 0 } }, sprites, type,
+        position, image, moving = false, speed, stats, currAction = undefined,
+        frames = { x: 1, y: 0, max: 1, scale: 1, offset: { x: 0, y: 0 } },
+        sprites, type
     }) {
         this.id = Math.floor(Math.random() * 1E16)
         this.stats = stats
         this.type = type
-        this.currAction = undefined
+        this.currAction = currAction
         this.sprites = sprites
         this.direction = 'down'
         this.position = position
         this.moving = moving
+        this.movedDistance = 0
         this.speed = speed
         this.attackingMode = false
         this.frames = { ...frames, val: 0, elapsed: 0 }
@@ -25,7 +27,8 @@ class Sprite {
             this.width = (this.image.width / this.frames.max)
             this.height = this.image.height
         }
-        if (this.type !== 'background' || this.type !== 'bullet') {
+        if (this.type !== 'background' || this.type !== 'bullet' || this.type !== 'extra') {
+            this.ammo = 0
             for (const imgType in this.sprites) {
                 if (Object.keys(this.sprites[imgType]).length > 1) {
                     for (const mode in this.sprites[imgType]) {
@@ -43,14 +46,12 @@ class Sprite {
         }
     }
     draw() {
-        context.save()
-        // if(this.type === 'player')
-        // console.log(this.image)
+        // context.save()
         context.drawImage(
             this.image,
             // the next two parameters are also used to animate a sprite image
             // to get around the background and foreground not in the animate method i added the width < 5000
-            (this.image.width / this.frames.max) < 5000 ? this.frames.val * (this.image.width / this.frames.max) : this.frames.val, //The x coordinate where to start clipping from img
+            this.type === 'ammo' || this.type === 'health' ? this.frames.val : (this.image.width / this.frames.max) < 5000 ? this.frames.val * (this.image.width / this.frames.max) : this.frames.val, //The x coordinate where to start clipping from img
             0, //The y coordinate where to start clipping from img
             this.image.width / this.frames.max, //how much to crop
             this.image.height, // The height of the clipped image
@@ -60,7 +61,7 @@ class Sprite {
             (this.image.width / this.frames.max) * this.frames.scale, //adjust scale the cutout image x
             this.image.height * this.frames.scale, //adjust scale the cutout image y
         )
-        context.restore()
+        // context.restore()
         // create a stroke at the center of the sprite 
         // context.strokeRect(this.position.x + (this.image.width / this.frames.max), this.position.y + (this.image.height), 100, 100)
         if (!this.moving) return
@@ -77,6 +78,19 @@ class Sprite {
             } else {
                 this.frames.val = 0
             }
+        }
+    }
+    animateAmmoOrHealth() {
+        if (this.frames.max > 1) {
+            this.frames.elapsed++
+        }
+        if (this.frames.elapsed % 1000000 === 0) {
+            this.movedDistance += .5
+            if (this.movedDistance === 15) {
+                this.movedDistance = 0
+                this.currAction === 'up' ? this.currAction = 'down' : this.currAction = 'up'
+            }
+            this.currAction === 'up' ? this.position.y += .2 : this.position.y -= .2
         }
     }
     getAroundBoundary() {
@@ -132,10 +146,12 @@ class Sprite {
                     this.image = this.sprites[this.direction][mode]
                     this.frames.max = this.sprites[whichFrames]
                     changeWidthHeight = true
-                    // player = null
                 }
                 else {
-                    // player attacks
+                    this.currAction = 'attack'
+                    this.image = this.sprites[this.direction][mode]
+                    this.frames.max = this.sprites[whichFrames]
+                    changeWidthHeight = true
                 }
                 setTimeout(() => {
                     this.currAction = undefined
@@ -233,6 +249,7 @@ class Enemy extends Sprite {
         }
         if (this.frames.elapsed % 20 === 0) {
             if (this.attackingMode) {
+                new Audio(arrowAudio).play();
                 player.stats.health -= this.stats.attackDamage
                 editHealthBar(player.stats.health + '%')
                 player.changeSprite('special', 'hurt', 'hurtFrames')
@@ -294,7 +311,7 @@ class Bullet {
                 this.image = this.down
                 this.direction = 'down'
                 this.position = {
-                    x: player.position.x + (player.image.width / player.frames.max) - this[direction].width / 4,
+                    x: player.position.x  ,
                     y: player.position.y + (player.image.height) + player.image.height
                 }
                 break;
@@ -306,7 +323,7 @@ class Bullet {
                 this.direction = 'up'
                 this.image = this.up
                 this.position = {
-                    x: player.position.x + (player.image.width / player.frames.max) - this[direction].width / 4,
+                    x: player.position.x ,
                     y: player.position.y + (player.image.height) - player.image.height * 2
                 }
                 break;
@@ -318,7 +335,7 @@ class Bullet {
                 this.direction = 'right'
                 this.image = this.right
                 this.position = {
-                    x: player.position.x + (player.image.width / player.frames.max) - this[direction].width / 4 + player.image.width / player.frames.max,
+                    x: player.position.x + (player.image.width / player.frames.max) ,
                     y: player.position.y + (player.image.height)
                 }
                 break;

@@ -30,17 +30,17 @@ const gameOver = () => {
     playBtn.addEventListener('click', restartGame)
     script.menu.style.display = 'flex'
     script.init()
+    Utils.ammoDiv.style.display = 'none'
+}
+const restartGame = () => {
     for (const i in gameStats) {
-        if (typeof gameStats[i] == 'boolean'){
+        if (typeof gameStats[i] == 'boolean') {
             gameStats[i] = false
         }
-        else{
+        else {
             gameStats[i] = 0
         }
     }
-    console.log(gameStats)
-}
-const restartGame = () => {
     Utils.editHealthBar(100 + '%')
     playGameStartAudio()
     script.menu.style.display = 'none'
